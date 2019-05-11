@@ -18,14 +18,16 @@ object Main {
         val display = Display(WIDTH, HEIGHT)
         val compiler = ShaderCompiler()
         val c1 = Sphere(vec4(-4f, 2f, 0f, 0f), 8f)
+        val blend: ShapeBlend = blendOfShapes(
+                2f,
+                Sphere(vec4(4f, -3f, 0f, 0f), 6f),
+                Sphere(vec4(0f, 5f, -3f, 0f), 8f),
+                Sphere(vec4(-10f, 2f, -2f, 0f), 10f),
+                Line(vec4(0.0f, 0.0f, 5.0f, 0.0f), vec4(15.0f, 15.0f, -15.0f, 0.0f), 2.0f),
+                Box(vec4(-10.0f, -10.0f, 5.0f, 0.0f), vec3(5.0f, 5.0f, 5.0f))
+        ) as ShapeBlend
         var shape: Shape = differenceOfShapes(
-                unionOfShapes(
-                        Sphere(vec4(4f, -3f, 0f, 0f), 6f),
-                        Sphere(vec4(0f, 5f, -3f, 0f), 8f),
-                        Sphere(vec4(-10f, 2f, -2f, 0f), 10f),
-                        Line(vec4(0.0f, 0.0f, 5.0f, 0.0f), vec4(15.0f, 15.0f, -15.0f, 0.0f), 2.0f),
-                        Box(vec4(-10.0f, -10.0f, 5.0f, 0.0f), vec3(5.0f, 5.0f, 5.0f))
-                ),
+                blend,
                 c1
         )
         val vertexShader = compiler.buildVertexShader()
@@ -41,7 +43,7 @@ object Main {
                 compiler.uniformValueLookups
         )
 
-        glfwSetInputMode(display.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+//        glfwSetInputMode(display.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
 
         var lastX = 0f
         var lastY = 0f
@@ -64,7 +66,12 @@ object Main {
             if (display.isKeyDown(GLFW_KEY_SPACE)) renderer.up(speed)
             if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer.up(-speed)
 
-            c1.setPosition(vec4(0.0f, Math.sin(t.toDouble() * 10).toFloat() * 8, 0.0f, 0.0f))
+             c1.setPosition(vec4(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8, 0.0f, 0.0f))
+            val f = 1 + Math.sin(t.toDouble() * 10).toFloat() * 3
+            blend.setFactor(f)
+            (blend.a as ShapeBlend).setFactor(f)
+            (blend.a.a as ShapeBlend).setFactor(f)
+            (blend.a.a.a as ShapeBlend).setFactor(f)
             renderer.renderToScreen()
             t += 0.01f
         }
