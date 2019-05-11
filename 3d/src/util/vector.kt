@@ -1,11 +1,32 @@
 package util
 
 data class vec4(val x: Float, val y: Float, val z: Float, val w: Float) {
+    constructor(x: Float) : this(x, x, x, x)
+    constructor(x: Float, w: Float) : this(x, x, x, w)
+
     fun vec3(): vec3 = vec3(x, y, z)
 }
 
 data class vec3(val x: Float, val y: Float, val z: Float) {
+    constructor(x: Float) : this(x, x, x)
 
+    fun vec4(w: Float): vec4 = vec4(x, y, z, w)
+
+    fun add(other: vec3): vec3 = vec3(x + other.x, y + other.y, z + other.z)
+
+    fun unm(): vec3 = vec3(-x, -y, -z)
+
+    fun mul(s: Float): vec3 = vec3(x * s, y * s, z * s)
+
+    fun cross(other: vec3) = vec3(
+            y*other.z - z*other.y,
+            z*other.x - x*other.z,
+            x*other.y - y*other.x
+    )
+
+    fun length(): Float = Math.sqrt((x*x + y*y + z*z).toDouble()).toFloat()
+
+    fun normalise(): vec3 = mul(1/length())
 }
 
 fun vec3.direction(): vec4 = vec4(x, y, z, 0.0f)

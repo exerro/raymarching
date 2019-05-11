@@ -12,7 +12,6 @@ class ShaderCompiler {
         var i = 1
         while (uniformValueLookups.values.contains("${name}_$i")) ++i
         uniformValueLookups[uniform] = "${name}_$i"
-        println(uniformValueLookups)
         return "${name}_$i"
     }
 

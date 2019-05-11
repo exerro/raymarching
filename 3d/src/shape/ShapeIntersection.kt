@@ -1,6 +1,6 @@
 package shape
 
-class ShapeIntersection(val a: Shape, val b: Shape): ShapeContainer {
+class ShapeIntersection(val a: Shape, val b: Shape): ShapeContainer() {
     override fun getDistanceFunctionHeader(): String?
             = null
 

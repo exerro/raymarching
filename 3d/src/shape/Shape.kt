@@ -1,30 +1,32 @@
 package shape
 
 import gl.GLShaderProgram
+import util.vec2
+import util.vec3
 import util.vec4
 
-interface Shape {
+abstract class Shape {
     /**
      * Returns a header to be prepended to shader code, useful for defining a function
      */
-    fun getDistanceFunctionHeader(): String?
+    abstract fun getDistanceFunctionHeader(): String?
 
     /**
      * Returns GLSL code to compute the distance to the object
      */
-    fun getDistanceFunction(): String
+    abstract fun getDistanceFunction(): String
 
     /**
      * Return a list of uniform values
      */
-    fun getUniforms(): Map<String, ShapeUniformValue>
+    abstract fun getUniforms(): Map<String, ShapeUniformValue>
 }
 
-interface ShapeContainer: Shape {
+abstract class ShapeContainer: Shape() {
     /**
      * Gets the list of children of this shape
      */
-    fun getChildren(): List<Shape>
+    abstract fun getChildren(): List<Shape>
 }
 
 sealed class ShapeUniformValue {
@@ -35,6 +37,22 @@ sealed class ShapeUniformValue {
 class FloatShapeUniformValue(var data: Float) : ShapeUniformValue() {
     override fun getGLSLType(): String
             = "float"
+
+    override fun setUniform(shader: GLShaderProgram, uniformName: String)
+            = shader.setUniform(uniformName, data)
+}
+
+class Vec2ShapeUniformValue(var data: vec2) : ShapeUniformValue() {
+    override fun getGLSLType(): String
+            = "vec2"
+
+    override fun setUniform(shader: GLShaderProgram, uniformName: String)
+            = shader.setUniform(uniformName, data)
+}
+
+class Vec3ShapeUniformValue(var data: vec3) : ShapeUniformValue() {
+    override fun getGLSLType(): String
+            = "vec3"
 
     override fun setUniform(shader: GLShaderProgram, uniformName: String)
             = shader.setUniform(uniformName, data)

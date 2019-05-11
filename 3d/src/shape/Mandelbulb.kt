@@ -28,7 +28,7 @@ val mandelbulb = "const float Power = 1.0;" +
         "\treturn 0.5*log(r)*r/dr;\n" +
         "}"
 
-class Mandelbulb : Shape {
+class Mandelbulb : Shape() {
     override fun getDistanceFunctionHeader(): String?
             = mandelbulb
 

@@ -1,6 +1,6 @@
 package shape
 
-class ShapeUnion(val a: Shape, val b: Shape): ShapeContainer {
+class ShapeUnion(val a: Shape, val b: Shape): ShapeContainer() {
     override fun getDistanceFunctionHeader(): String?
             = null
 

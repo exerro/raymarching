@@ -2,7 +2,7 @@ package shape
 
 import util.vec4
 
-class Sphere(position: vec4, radius: Float) : Shape {
+class Sphere(position: vec4, radius: Float) : Shape() {
     private val positionUniform: Vec4ShapeUniformValue = Vec4ShapeUniformValue(position)
     private val radiusUniform: FloatShapeUniformValue = FloatShapeUniformValue(radius)
 
@@ -23,11 +23,9 @@ class Sphere(position: vec4, radius: Float) : Shape {
     override fun getDistanceFunction(): String
             = "distance(\$ray_position, \$position) - \$radius"
 
-    override fun getUniforms(): Map<String, ShapeUniformValue> {
-        return mapOf(
-                "position" to positionUniform,
-                "radius" to radiusUniform
-        )
-    }
+    override fun getUniforms(): Map<String, ShapeUniformValue> = mapOf(
+            "position" to positionUniform,
+            "radius" to radiusUniform
+    )
 
 }

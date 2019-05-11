@@ -75,6 +75,8 @@ class Display : GLResource {
         GL.createCapabilities()
     }
 
+    fun isKeyDown(key: Int): Boolean = glfwGetKey(window, key) == GLFW_PRESS
+
     fun loop(render: () -> Unit) {
         // set the clear colour to black
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f)

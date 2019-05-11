@@ -1,6 +1,6 @@
 package shape
 
-class ShapeDifference(val a: Shape, val b: Shape): ShapeContainer {
+class ShapeDifference(val a: Shape, val b: Shape): ShapeContainer() {
     override fun getDistanceFunctionHeader(): String?
             = null
 

@@ -17,3 +17,4 @@ This is heavily inspired by [Sebastian Lague's Ray Marching video](https://www.y
 
 - http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/
 - https://www.youtube.com/watch?v=Cp5WWtMoeKg
+- https://iquilezles.org/www/articles/distfunctions/distfunctions.htm
