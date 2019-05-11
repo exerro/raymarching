@@ -43,7 +43,7 @@ class ShaderCompiler {
             = headers.joinToString("\n\n") + "\n\n" + uniforms.map { (name, type) -> "uniform $type $name;" } .joinToString("\n")
 
     fun buildFragmentShader(shape: Shape): String {
-        val distance_function = compileShapeDistanceFunction(shape).replace("\$ray_position", "rp")
+        val distance_function = compileShapeDistanceFunction(shape).replace("\$ray_position", "ray_position")
         return String(Files.readAllBytes(Paths.get("src/glsl/fragment.glsl")))
                 .replace("/*\$header*/", buildHeader())
                 .replace("0/*\$distance_function*/", distance_function)

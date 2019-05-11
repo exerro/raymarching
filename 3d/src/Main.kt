@@ -13,9 +13,13 @@ object Main {
         val display = Display(WIDTH, HEIGHT)
         val compiler = ShaderCompiler()
         val c1 = Sphere(vec4(-4f, 2f, 0f, 0f), 8f)
-        var shape: Shape = unionOfShapes(
-                Sphere(vec4(4f, 0f, 0f, 0f), 8f),
-                Sphere(vec4(2f, 3f, -1f, 0f), 8f),
+        var shape: Shape = differenceOfShapes(
+                unionOfShapes(
+                        Sphere(vec4(4f, -3f, 0f, 0f), 6f),
+                        Sphere(vec4(0f, 5f, -3f, 0f), 8f),
+                        Sphere(vec4(-10f, 2f, -2f, 0f), 10f),
+                        Line(vec4(0.0f, 0.0f, 5.0f, 0.0f), vec4(15.0f, 15.0f, -15.0f, 0.0f), 2.0f)
+                ),
                 c1
         )
         val vertexShader = compiler.buildVertexShader()
