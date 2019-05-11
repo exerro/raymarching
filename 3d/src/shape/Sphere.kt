@@ -21,7 +21,7 @@ class Sphere(position: vec4, radius: Float) : Shape {
             = null
 
     override fun getDistanceFunction(): String
-            = "distance(\$ray_position, \$util.position) - \$radius"
+            = "distance(\$ray_position, \$position) - \$radius"
 
     override fun getUniforms(): Map<String, ShapeUniformValue> {
         return mapOf(

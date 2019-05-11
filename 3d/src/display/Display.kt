@@ -11,11 +11,16 @@ import gl.GLResource
 
 class Display : GLResource {
     val window: Long
+    val width: Int
+    val height: Int
 
     /**
      * Creates a new display, using the standard GLFW init code found at https://www.lwjgl.org/guide
      */
-    constructor() {
+    constructor(width: Int, height: Int) {
+        this.width = width
+        this.height = height
+
         GLFWErrorCallback.createPrint(System.err).set()
 
         if(!glfwInit())
@@ -31,6 +36,8 @@ class Display : GLResource {
 
         if (window == NULL)
             throw RuntimeException("Failed to create the GLFW window")
+
+        glfwSetWindowSize(window, width, height)
 
         // get the thread stack and push a new frame
         stackPush().use { stack ->
@@ -71,6 +78,7 @@ class Display : GLResource {
     fun loop(render: () -> Unit) {
         // set the clear colour to black
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
+        glViewport(0, 0, width, height)
 
         // run the rendering loop until the user has attempted to close the window or has pressed the ESCAPE key
         while (!glfwWindowShouldClose(window)) {

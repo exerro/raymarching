@@ -1,41 +1,40 @@
 import display.Display
-import gl.ShaderLoadException
 import gl.loadShaderProgram
-import gl.screen_quad
-import org.lwjgl.opengl.GL11.*
-import shape.ShaderCompiler
-import shape.ShapeUnion
-import shape.Sphere
+import shape.*
 import util.vec4
 
 object Main {
+    var t: Float = 0.0f
+    val WIDTH = 720
+    val HEIGHT = 540
+
     @JvmStatic
     fun main(args: Array<String>) {
+        val display = Display(WIDTH, HEIGHT)
         val compiler = ShaderCompiler()
-        val shape = ShapeUnion(
-                Sphere(vec4(0f, 0f, 0f, 0f), 10f),
-                Sphere(vec4(0f, 0f, 0f, 0f), 5f)
+        val c1 = Sphere(vec4(-4f, 2f, 0f, 0f), 8f)
+        var shape: Shape = unionOfShapes(
+                Sphere(vec4(4f, 0f, 0f, 0f), 8f),
+                Sphere(vec4(2f, 3f, -1f, 0f), 8f),
+                c1
         )
         val vertexShader = compiler.buildVertexShader()
         val fragmentShader = compiler.buildFragmentShader(shape)
-        val display = Display()
-        val quad = screen_quad
 
         println(vertexShader)
         println(fragmentShader)
 
-        val shader = try { loadShaderProgram(vertexShader, fragmentShader) } catch (e: ShaderLoadException) {
-            e.printStackTrace()
-            println(e.shaderContent)
-            null
-        }
+        val renderer = ShapeRenderer(
+                WIDTH.toFloat()/HEIGHT,
+                loadShaderProgram(vertexShader, fragmentShader),
+                shape,
+                compiler.uniformValueLookups
+        )
 
         display.loop {
-            shader!!.start()
-            quad.load()
-            glDrawElements(GL_TRIANGLES, quad.vertexCount, GL_UNSIGNED_INT, 0)
-            quad.unload()
-            shader!!.stop()
+            c1.setPosition(vec4(Math.sin(t.toDouble() * 10).toFloat() * 8, 0.0f, 0.0f, 0.0f))
+            renderer.renderToScreen()
+            t += 0.01f
         }
 
         display.close()

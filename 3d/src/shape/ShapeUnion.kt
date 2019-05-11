@@ -13,3 +13,9 @@ class ShapeUnion(val a: Shape, val b: Shape): ShapeContainer {
     override fun getChildren(): List<Shape>
             = listOf(a, b)
 }
+
+fun unionOfShapes(shape: Shape, vararg shapes: Shape): Shape {
+    if (shapes.isEmpty()) return shape
+
+    return shapes.fold(shape) { a, b -> ShapeUnion(a, b) }
+}

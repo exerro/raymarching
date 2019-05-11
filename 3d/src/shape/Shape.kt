@@ -18,15 +18,6 @@ interface Shape {
      * Return a list of uniform values
      */
     fun getUniforms(): Map<String, ShapeUniformValue>
-
-    /**
-     * Sets uniforms in a shader given their name lookups
-     */
-    fun setUniforms(shader: GLShaderProgram, names: Map<ShapeUniformValue, String>) {
-        names.map { (value, name) ->
-            value.setUniform(shader, name)
-        }
-    }
 }
 
 interface ShapeContainer: Shape {
@@ -41,7 +32,7 @@ sealed class ShapeUniformValue {
     abstract fun getGLSLType(): String
 }
 
-data class FloatShapeUniformValue(var data: Float) : ShapeUniformValue() {
+class FloatShapeUniformValue(var data: Float) : ShapeUniformValue() {
     override fun getGLSLType(): String
             = "float"
 
@@ -49,7 +40,7 @@ data class FloatShapeUniformValue(var data: Float) : ShapeUniformValue() {
             = shader.setUniform(uniformName, data)
 }
 
-data class Vec4ShapeUniformValue(var data: vec4) : ShapeUniformValue() {
+class Vec4ShapeUniformValue(var data: vec4) : ShapeUniformValue() {
     override fun getGLSLType(): String
             = "vec4"
 

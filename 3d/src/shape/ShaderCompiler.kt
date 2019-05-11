@@ -1,14 +1,18 @@
 package shape
 
+import java.nio.file.Files
+import java.nio.file.Paths
+
 class ShaderCompiler {
     private val headers = HashSet<String>()
-    private val uniformValueLookups = HashMap<ShapeUniformValue, String>()
     private val uniforms = HashMap<String, String>()
+    val uniformValueLookups = HashMap<ShapeUniformValue, String>()
 
     private fun getName(name: String, uniform: ShapeUniformValue): String {
         var i = 1
         while (uniformValueLookups.values.contains("${name}_$i")) ++i
         uniformValueLookups[uniform] = "${name}_$i"
+        println(uniformValueLookups)
         return "${name}_$i"
     }
 
@@ -39,28 +43,13 @@ class ShaderCompiler {
             = headers.joinToString("\n\n") + "\n\n" + uniforms.map { (name, type) -> "uniform $type $name;" } .joinToString("\n")
 
     fun buildFragmentShader(shape: Shape): String {
-        val content = compileShapeDistanceFunction(shape)
-        val str = StringBuilder()
-        str.append("#version 440 core\n\n")
-        str.append(buildHeader())
-        str.append("\n\nvoid main(void) {\n")
-        // str.append("\t" + content)
-        str.append("\tgl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);")
-        str.append("\n}")
-        return str.toString()
+        val distance_function = compileShapeDistanceFunction(shape).replace("\$ray_position", "rp")
+        return String(Files.readAllBytes(Paths.get("src/glsl/fragment.glsl")))
+                .replace("/*\$header*/", buildHeader())
+                .replace("0/*\$distance_function*/", distance_function)
     }
 
     fun buildVertexShader(): String {
-        val str = StringBuilder()
-        str.append("#version 440 core\n\n")
-        str.append("layout (location=0) in vec3 vertex;\n")
-        str.append("layout (location=1) in vec2 vertex_uv;\n")
-        str.append("\n")
-        str.append("void main(void) {\n")
-        str.append("\tgl_Position = vec4(vertex, 1);\n")
-        str.append("\t\n")
-        str.append("\t\n")
-        str.append("}")
-        return str.toString()
+        return String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
     }
 }
