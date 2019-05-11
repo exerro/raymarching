@@ -16,6 +16,7 @@ object Main {
     fun main(args: Array<String>) {
         assert(mat4_identity.mul(mat4_scale(2.0f)) == mat4_scale(2.0f))
         val display = Display(WIDTH, HEIGHT)
+
         val compiler = ShaderCompiler()
         val c1 = Sphere(vec4(-4f, 2f, 0f, 0f), 8f)
         val blend: ShapeBlend = blendOfShapes(
@@ -26,7 +27,8 @@ object Main {
                 Line(vec4(0.0f, 0.0f, 5.0f, 0.0f), vec4(15.0f, 15.0f, -15.0f, 0.0f), 2.0f),
                 Box(vec4(-10.0f, -10.0f, 5.0f, 0.0f), vec3(5.0f, 5.0f, 5.0f))
         ) as ShapeBlend
-        var shape: Shape = differenceOfShapes(
+        var shape: Shape = dissolveOfShapes(
+                2f,
                 blend,
                 c1
         )
@@ -43,7 +45,11 @@ object Main {
                 compiler.uniformValueLookups
         )
 
-//        glfwSetInputMode(display.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+        display.onResizedCallback = { width, height ->
+            renderer.aspectRatio = width.toFloat() / height
+        }
+
+        glfwSetInputMode(display.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
 
         var lastX = 0f
         var lastY = 0f
