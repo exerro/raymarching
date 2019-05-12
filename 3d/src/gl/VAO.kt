@@ -21,7 +21,7 @@ import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
     - setBufferData();
  */
 
-open class VAO(): GLResource {
+open class VAO : GLResource {
     var vertexCount = 0 // the number of integers in the element buffer
     var instanceCount = 0 // the number of instances to draw
     private val vaoID: Int = GL30.glGenVertexArrays() // the ID of the VAO
