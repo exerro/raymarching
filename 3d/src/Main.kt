@@ -55,57 +55,11 @@ object Main {
             )
         }
 
-        shape = ShapeUnion(
-                box_outline(vec3(10f)),
-                box_outline(vec3(7f)),
-                box_outline(vec3(4f))
-        )
-
-//        val box = Box(vec3(5f))
-//                .setColour(0.9f, 0.3f, 0.6f)
-//                .translateBy(vec3(-3f, 5f, 0f))
-//
-//        shape = ShapeDissolve(
-//                5f,
-//                ShapeIntersection(
-//                        Sphere(10f)
-//                                .setColour(0.3f, 0.6f, 0.9f),
-//                        Sphere(10f)
-//                                .setColour(0.3f, 0.9f, 0.6f)
-//                                .translateBy(vec3(-8f, 8f, 0f))
-//                ),
-//                box
+//        shape = ShapeUnion(
+//                box_outline(vec3(10f)),
+//                box_outline(vec3(7f)),
+//                box_outline(vec3(4f))
 //        )
-
-        val L = Line(vec3(0f, 4f, 3f), vec3(0f, 8f, 30f), 3f).setColour(0.9f, 0.6f, 0.6f)
-        val tip = Sphere(3.5f).setColour(0.6f, 0.2f, 0.5f).setTranslation(vec3(0f, 8f, 30f))
-
-        shape = ShapeBlend(
-                2f,
-                Sphere(5f).setColour(0.9f, 0.6f, 0.6f).setTranslation(vec3(-3f, 0f, 3f)),
-                Sphere(5f).setColour(0.9f, 0.6f, 0.6f).setTranslation(vec3(3f, 0f, 3f)),
-                ShapeUnion(
-                        L,
-                        tip
-                )
-        )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        compiler.useGBuffer()
 
         val vertexShader = compiler.buildVertexShader()
         val fragmentShader = compiler.buildFragmentShader(shape)
@@ -157,7 +111,8 @@ object Main {
                     shape,
                     compiler.lookup,
                     width,
-                    height
+                    height,
+                    renderer!!.camera
             )
         }
 
@@ -179,10 +134,6 @@ object Main {
 
 //            box.rotateBy(vec3(0f, -dt*2, 0f))
 
-            val tipP = vec3(0f, 12f - (1 - Math.sin(t.toDouble()).toFloat()) * 6, 10 + (1 + Math.sin(t.toDouble()).toFloat()) * 10)
-            (L as Line).setB(tipP)
-            tip.setTranslation(tipP)
-
             if (display.FPS != lastFPS) {
                 println("FPS: ${display.FPS}")
                 lastFPS = display.FPS
@@ -192,9 +143,9 @@ object Main {
         }
 
         display.onDrawCallback = {
-            renderer?.renderToBuffer(buffer!!)
-            // Draw.texture(renderer?.texture!!)
-            buffer?.debugDraw()
+            renderer?.renderToFramebuffer()
+             Draw.texture(renderer?.texture!!)
+//            buffer?.debugDraw()
         }
 
         display.run()

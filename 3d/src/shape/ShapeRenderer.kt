@@ -13,13 +13,12 @@ class ShapeRenderer(
         val shape: Shape,
         private val lookupUniform: UniformNameLookup,
         private val width: Int,
-        private val height: Int
+        private val height: Int,
+        val camera: Camera = Camera()
 ): GLResource {
     var aspectRatio = width.toFloat() / height
-    var FOV: Float = 70.0f
     var framebuffer = FBO(width, height)
     var texture = createEmptyTexture(width, height)
-    val camera: Camera = Camera()
     var sent = false
 
     init {
@@ -109,7 +108,7 @@ class ShapeRenderer(
         shader.setUniform("ray_position", camera.position.position())
         shader.setUniform("transform", camera.rotation.toRotationMatrix())
         shader.setUniform("aspectRatio", aspectRatio)
-        shader.setUniform("FOV", FOV * Math.PI.toFloat() / 180.0f)
+        shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
         lookupUniform.valueNames.map { (value, name) ->
             value.setUniform(shader, name)
         }

@@ -1,6 +1,6 @@
 #version 440 core
 
-const int MAX_ITERATIONS = 100;
+const int MAX_ITERATIONS = 400;
 const float EPSILON = 0.0001;
 const vec4 LIGHT_POSITION = normalize(vec4(2, 3, 1, 0));
 const float MAX_DISTANCE = 250;
@@ -67,5 +67,4 @@ void main(void) {
 
 //	gl_FragColor = vec4(i / MAX_ITERATIONS, 0, 0, 1);
 	gl_FragColor = vec4(0, 0, 0, 0);
-	gl_FragColor = vec4(0, 0, i / 100, 0);
 }
