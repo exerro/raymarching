@@ -1,8 +1,9 @@
 #version 440 core
 
-const int MAX_ITERATIONS = 255;
+const int MAX_ITERATIONS = 100;
 const float EPSILON = 0.0001;
 const vec4 LIGHT_POSITION = normalize(vec4(2, 3, 1, 0));
+const float MAX_DISTANCE = 250;
 
 struct Material {
 	vec4 colour;
@@ -31,15 +32,15 @@ float lighting(vec4 position, vec3 normal) {
 	return ambient + diffuse + specular;
 }
 
-DistanceData distance_function(vec4 ray_position) {
-	return /*$distance_function*/;
+float distance_function(vec4 ray_position) {
+	return 0/*$distance_function*/;
 }
 
 vec3 estimateNormal(vec4 p) {
 	return normalize(vec3(
-		distance_function(vec4(p.x + EPSILON, p.y, p.z, 1)).distance - distance_function(vec4(p.x - EPSILON, p.y, p.z, 1)).distance,
-		distance_function(vec4(p.x, p.y + EPSILON, p.z, 1)).distance - distance_function(vec4(p.x, p.y - EPSILON, p.z, 1)).distance,
-		distance_function(vec4(p.x, p.y, p.z  + EPSILON, 1)).distance - distance_function(vec4(p.x, p.y, p.z - EPSILON, 1)).distance
+		distance_function(vec4(p.x + EPSILON, p.y, p.z, 1)) - distance_function(vec4(p.x - EPSILON, p.y, p.z, 1)),
+		distance_function(vec4(p.x, p.y + EPSILON, p.z, 1)) - distance_function(vec4(p.x, p.y - EPSILON, p.z, 1)),
+		distance_function(vec4(p.x, p.y, p.z  + EPSILON, 1)) - distance_function(vec4(p.x, p.y, p.z - EPSILON, 1))
 	));
 }
 
@@ -49,20 +50,22 @@ void main(void) {
 	float total_distance = 0;
 	int i = 0;
 
-	for (; i < MAX_ITERATIONS && total_distance < 1000; ++i) {
-		DistanceData data = distance_function(rp);
-		float distance = data.distance;
-		vec4 colour = data.material.colour;
+	gl_FragColor = vec4(1, 0, 0, 1);
+
+	for (; i < MAX_ITERATIONS && total_distance < MAX_DISTANCE; ++i) {
+		float distance = distance_function(rp);
 		total_distance += distance;
 		rp += rd * distance;
 
 		if (abs(distance) < 0.001) {
-			gl_FragColor = colour * vec4(vec3(lighting(rp, estimateNormal(rp))), 1);
-//			gl_FragColor = vec4(i / MAX_ITERATIONS, 0, 0, 1);
+			DistanceData data = /*$data_function*/;
+			gl_FragColor = data.material.colour * vec4(vec3(lighting(rp, estimateNormal(rp))), 1);
+//			gl_FragColor = vec4(i / 100, 0, 0, 1);
 			return;
 		}
 	}
 
 //	gl_FragColor = vec4(i / MAX_ITERATIONS, 0, 0, 1);
 	gl_FragColor = vec4(0, 0, 0, 0);
+	gl_FragColor = vec4(0, 0, i / 100, 0);
 }

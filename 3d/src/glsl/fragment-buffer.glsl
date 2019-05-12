@@ -29,15 +29,15 @@ uniform float aspectRatio;
 
 /*$header*/
 
-DistanceData distance_function(vec4 ray_position) {
-	return /*$distance_function*/;
+float distance_function(vec4 ray_position) {
+	return 0/*$distance_function*/;
 }
 
 vec3 estimateNormal(vec4 p) {
 	return normalize(vec3(
-		distance_function(vec4(p.x + EPSILON, p.y, p.z, 1)).distance - distance_function(vec4(p.x - EPSILON, p.y, p.z, 1)).distance,
-		distance_function(vec4(p.x, p.y + EPSILON, p.z, 1)).distance - distance_function(vec4(p.x, p.y - EPSILON, p.z, 1)).distance,
-		distance_function(vec4(p.x, p.y, p.z  + EPSILON, 1)).distance - distance_function(vec4(p.x, p.y, p.z - EPSILON, 1)).distance
+		distance_function(vec4(p.x + EPSILON, p.y, p.z, 1)) - distance_function(vec4(p.x - EPSILON, p.y, p.z, 1)),
+		distance_function(vec4(p.x, p.y + EPSILON, p.z, 1)) - distance_function(vec4(p.x, p.y - EPSILON, p.z, 1)),
+		distance_function(vec4(p.x, p.y, p.z  + EPSILON, 1)) - distance_function(vec4(p.x, p.y, p.z - EPSILON, 1))
 	));
 }
 
@@ -48,13 +48,13 @@ void main(void) {
 	int i = 0;
 
 	for (; i < MAX_ITERATIONS && total_distance < 1000; ++i) {
-		DistanceData data = distance_function(rp);
-		float distance = data.distance;
+		float distance = distance_function(rp);
 		total_distance += distance;
 		rp += rd * distance;
 
 		if (abs(distance) < 0.001) {
 			vec3 normal = estimateNormal(rp);
+			DistanceData data = /*$data_function*/;
 			fragment_colour = data.material.colour;
 			fragment_position = rp;
 			fragment_normal = vec4(normal, 1);

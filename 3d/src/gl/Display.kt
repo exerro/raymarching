@@ -28,6 +28,7 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
     var onDrawCallback: (() -> Unit)? = null
     var onLoadCallback: (() -> Unit)? = null
     var onUnloadCallback: (() -> Unit)? = null
+    var FPS = 0
 
     fun setMouseLocked(locked: Boolean) {
         whenSetup {
@@ -79,6 +80,8 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
 
     fun run() {
         var lastUpdate = System.currentTimeMillis()
+        var tick = 50
+        var lastFPSTime = System.currentTimeMillis()
 
         setup()
         running = true
@@ -94,12 +97,21 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
             val dt = t - lastUpdate
             lastUpdate = t
 
+            if (tick-- == 0) {
+                tick = 50
+                FPS = (1 / ((t - lastFPSTime) / 50000f)).toInt()
+                lastFPSTime = t
+            }
+
             // call the update render callbacks
             onUpdateCallback?.invoke(dt / 1000f)
             onDrawCallback?.invoke()
 
             // swap the color buffers to present the content to the screen
+            val t1 = System.currentTimeMillis()
             glfwSwapBuffers(window)
+            glFlush()
+            System.out.println("${System.currentTimeMillis() - t1}ms/${dt}ms")
 
             // poll for window events
             // the key callback above will only be invoked during this call
@@ -146,7 +158,8 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
             )
 
         glfwMakeContextCurrent(window) // make the OpenGL context current
-        glfwSwapInterval(1) // enable v-sync
+//        glfwSwapInterval(1) // enable v-sync
+        glfwSwapInterval(0) // disable v-sync
         glfwShowWindow(window) // make the window visible
 
         GL.createCapabilities() // makes OpenGL bindings available to use from LWJGL

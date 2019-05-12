@@ -17,10 +17,10 @@ class ShapeRenderer(
 ): GLResource {
     var aspectRatio = width.toFloat() / height
     var FOV: Float = 70.0f
-    var position = vec3(0.0f, 0.0f, 30.0f)
-    var rotation = vec3(0f, 0f, 0f)
     var framebuffer = FBO(width, height)
     var texture = createEmptyTexture(width, height)
+    val camera: Camera = Camera()
+    var sent = false
 
     init {
         framebuffer.attachTexture(texture, GL_COLOR_ATTACHMENT0)
@@ -28,45 +28,27 @@ class ShapeRenderer(
         println("width: $width, height: $height")
     }
 
-    fun forward(distance: Float) {
-        position = position.add(getFacing().flat().mul(distance))
-    }
-
-    fun right(distance: Float) {
-        position = position.add(getRight().mul(distance))
-    }
-
-    fun up(distance: Float) {
-        position = position.add(vec3(0f, distance, 0f))
-    }
-
-    fun rotateX(theta: Float) {
-        rotation = rotation.add(vec3(theta, 0f, 0f))
-    }
-
-    fun rotateY(theta: Float) {
-        rotation = rotation.add(vec3(0f, theta, 0f))
-    }
-
-    fun rotateZ(theta: Float) {
-        rotation = rotation.add(vec3(0f, 0f, theta))
-    }
-
     fun renderToFramebuffer() {
+        val t = System.currentTimeMillis()
+
         framebuffer.bind()
         glClearColor(0f, 0f, 0f, 1f)
         glClear(GL_COLOR_BUFFER_BIT)
 
         setUniforms()
+        val t1 = System.currentTimeMillis()
         shader.start()
         screen_quad.load()
         glDrawElements(GL_TRIANGLES, screen_quad.vertexCount, GL_UNSIGNED_INT, 0)
         screen_quad.unload()
         shader.stop()
         framebuffer.unbind()
+        val e = System.currentTimeMillis()
+        println("${e-t1}ms/${e-t}ms = ${((e-t1).toFloat()/(e-t)*1000).toInt()/10f}%")
     }
 
     fun renderToBuffer(buffer: GBuffer) {
+        // TODO
         buffer.bind()
 
         Draw.pushViewport(vec2(width.toFloat(), height.toFloat()))
@@ -121,13 +103,11 @@ class ShapeRenderer(
         buffer.unbindReading()
     }
 
-    fun getFacing(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 0f, -1f).direction()).vec3()
-    fun getUp(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 1f, 0f).direction()).vec3()
-    fun getRight(): vec3 = rotation.toRotationMatrix().mul(vec3(1f, 0f, 0f).direction()).vec3()
-
     private fun setUniforms() {
-        shader.setUniform("ray_position", position.position())
-        shader.setUniform("transform", rotation.toRotationMatrix())
+//        if (sent) return
+        sent = true
+        shader.setUniform("ray_position", camera.position.position())
+        shader.setUniform("transform", camera.rotation.toRotationMatrix())
         shader.setUniform("aspectRatio", aspectRatio)
         shader.setUniform("FOV", FOV * Math.PI.toFloat() / 180.0f)
         lookupUniform.valueNames.map { (value, name) ->
@@ -161,5 +141,3 @@ class ShapeRenderer(
         shader.destroy()
     }
 }
-
-private fun vec3.flat(): vec3 = vec3(x, 0f, z).normalise()

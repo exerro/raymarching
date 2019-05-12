@@ -56,6 +56,11 @@ sealed class Shape {
     abstract fun getHeader(): String?
 
     /**
+     * Return GLSL code to compute just the distance to the object
+     */
+    abstract fun getDistanceFunction(): String
+
+    /**
      * Returns GLSL code to compute the distance to the object and material properties
      */
     abstract fun getFunction(): String
@@ -88,7 +93,6 @@ abstract class MaterialShape(material: Material): Shape() {
         return this
     }
 
-    abstract fun getDistanceFunction(): String
     /**
      * Returns GLSL code to compute the distance to the object and material properties
      */

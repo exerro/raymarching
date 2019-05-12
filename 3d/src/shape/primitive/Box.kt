@@ -20,7 +20,7 @@ class Box(size: vec3, material: Material = default_material()) : MaterialShape(m
             "}"
 
     override fun getDistanceFunction(): String
-            = "sdBox(\$ray_position.xyz, (1 * vec4(\$size, 0)).xyz)"
+            = "sdBox(\$ray_position.xyz, \$size)"
 
     override fun getUniforms(): Map<String, ShapeUniformValue> = mapOf(
             "size" to sizeUniform
