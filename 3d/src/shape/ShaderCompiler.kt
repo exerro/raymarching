@@ -6,7 +6,7 @@ import java.nio.file.Paths
 class ShaderCompiler {
     private val headers = HashSet<String>()
     private val uniforms = HashMap<String, String>()
-    val lookup = NameLookup()
+    val lookup = UniformNameLookup()
 
     private fun compileShapeFunction(shape: Shape): String {
         val header = shape.getHeader()
@@ -27,7 +27,12 @@ class ShaderCompiler {
             }
         }
         else if (shape is MaterialShape) {
-            func.replace("\$material", lookup.getMaterialUniformName(shape))
+            val transformationUniform = lookup.getTransformationUniformName(shape)
+            func
+                    .replace("\$transformation", transformationUniform)
+                    .replace("\$ray_position", "($transformationUniform * ray_position)")
+                    .replace("\$material", lookup.getMaterialUniformName(shape))
+                    .replace("\$transformation_scale", "${transformationUniform}_scale")
         }
         else {
             func
@@ -39,13 +44,15 @@ class ShaderCompiler {
               "\n\n" +
               uniforms.map { (name, type) -> "uniform $type $name;" } .joinToString("\n") +
               "\n\n" +
-              lookup.materials.map { (_, name) -> "uniform Material $name;" } .joinToString("\n")
+              lookup.materialNames.map { (_, name) -> "uniform Material $name;" } .joinToString("\n") +
+              "\n\n" +
+              lookup.transformationNames.map { (_, name) -> "uniform mat4 $name; uniform float ${name}_scale;" } .joinToString("\n")
 
     fun buildFragmentShader(shape: Shape): String {
-        val distance_function = compileShapeFunction(shape).replace("\$ray_position", "ray_position")
+        val distance_function = compileShapeFunction(shape)
         return String(Files.readAllBytes(Paths.get("src/glsl/fragment.glsl")))
                 .replace("/*\$header*/", buildHeader())
-                .replace("0/*\$distance_function*/", distance_function)
+                .replace("/*\$distance_function*/", distance_function)
     }
 
     fun buildVertexShader(): String {
@@ -53,22 +60,31 @@ class ShaderCompiler {
     }
 }
 
-class NameLookup {
-    val uniformValues = HashMap<ShapeUniformValue, String>()
-    val materials = HashMap<MaterialShape, String>()
+class UniformNameLookup {
+    val valueNames = HashMap<ShapeUniformValue, String>()
+    val materialNames = HashMap<MaterialShape, String>()
+    val transformationNames = HashMap<MaterialShape, String>()
 
     fun getValueUniformName(name: String, uniform: ShapeUniformValue): String {
         var i = 1
-        while (uniformValues.values.contains("${name}_$i")) ++i
-        uniformValues[uniform] = "${name}_$i"
+        while (valueNames.values.contains("${name}_$i")) ++i
+        valueNames[uniform] = "${name}_$i"
         return "${name}_$i"
     }
 
     fun getMaterialUniformName(shape: MaterialShape): String {
         var i = 1
         val name = shape.javaClass.simpleName
-        while (materials.values.contains("${name}_${i}_material")) ++i
-        materials[shape] = "${name}_${i}_material"
+        while (materialNames.values.contains("${name}_${i}_material")) ++i
+        materialNames[shape] = "${name}_${i}_material"
         return "${name}_${i}_material"
+    }
+
+    fun getTransformationUniformName(shape: MaterialShape): String {
+        var i = 1
+        val name = shape.javaClass.simpleName
+        while (transformationNames.values.contains("${name}_${i}_transformation")) ++i
+        transformationNames[shape] = "${name}_${i}_transformation"
+        return "${name}_${i}_transformation"
     }
 }

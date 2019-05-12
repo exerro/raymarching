@@ -15,7 +15,7 @@ class Box(center: vec4, size: vec3, material: Material = default_material) : Mat
             "}"
 
     override fun getDistanceFunction(): String
-            = "sdBox((\$ray_position - \$center).xyz, \$size)"
+            = "sdBox((\$ray_position - \$center).xyz, (1 * vec4(\$size, 0)).xyz)"
 
     override fun getUniforms(): Map<String, ShapeUniformValue> = mapOf(
             "center" to centerUniform,

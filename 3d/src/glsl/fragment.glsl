@@ -32,7 +32,7 @@ float lighting(vec4 position, vec3 normal) {
 }
 
 DistanceData distance_function(vec4 ray_position) {
-	return 0/*$distance_function*/;
+	return /*$distance_function*/;
 }
 
 vec3 estimateNormal(vec4 p) {
@@ -47,8 +47,9 @@ void main(void) {
 	vec4 rp = ray_position;
 	vec4 rd = transform * vec4(normalize(vec3((uv * 2 - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2))), 0.0);
 	float total_distance = 0;
+	int i = 0;
 
-	for (int i = 0; i < MAX_ITERATIONS && total_distance < 1000; ++i) {
+	for (; i < MAX_ITERATIONS && total_distance < 1000; ++i) {
 		DistanceData data = distance_function(rp);
 		float distance = data.distance;
 		vec4 colour = data.material.colour;
@@ -57,9 +58,11 @@ void main(void) {
 
 		if (abs(distance) < 0.001) {
 			gl_FragColor = colour * vec4(vec3(lighting(rp, estimateNormal(rp))), 1);
+//			gl_FragColor = vec4(i / MAX_ITERATIONS, 0, 0, 1);
 			return;
 		}
 	}
 
+//	gl_FragColor = vec4(i / MAX_ITERATIONS, 0, 0, 1);
 	gl_FragColor = vec4(0, 0, 0, 0);
 }

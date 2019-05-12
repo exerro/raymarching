@@ -2,9 +2,7 @@ import display.Display
 import gl.loadShaderProgram
 import org.lwjgl.glfw.GLFW.*
 import shape.*
-import util.position
-import util.vec3
-import util.vec4
+import util.*
 
 object Main {
     var t: Float = 0.0f
@@ -15,24 +13,24 @@ object Main {
     fun main(args: Array<String>) {
         val display = Display(WIDTH, HEIGHT)
         val compiler = ShaderCompiler()
-        val sphere = Sphere(vec4(-4f, 2f, 0f, 0f), 8f, Material(vec4(0.3f, 0.9f, 0.6f, 1f)))
-        val sphere2 = Sphere(vec4(-4f, 2f, 0f, 0f), 6f, Material(vec4(1f, 0f, 0f, 1f)))
+        val sphere = Sphere(8f, Material(vec3(0.3f, 0.9f, 0.6f))).setTranslation(vec3(-4f, 2f, 0f))
+        val sphere2 = Sphere(6f, Material(vec3(1f, 0f, 0f))).setTranslation(vec3(-4f, 2f, 0f))
         val blend = ShapeBlend(
-                2.0f,
-                Sphere(vec4(4f, -3f, 0f, 0f), 6f, Material(vec4(0.3f, 0.6f, 0.9f, 1f))),
-                Sphere(vec4(0f, 5f, -3f, 0f), 8f, Material(vec4(0.3f, 0.6f, 0.9f, 1f))),
-                Sphere(vec4(-10f, 2f, -2f, 0f), 10f, Material(vec4(0.3f, 0.6f, 0.9f, 1f))),
+                4.0f,
+                Sphere(6f, Material(vec3(0.3f, 0.6f, 0.9f))).setTranslation(vec3(4f, -3f, 0f)),
+                Sphere(8f, Material(vec3(0.3f, 0.6f, 0.9f))).setTranslation(vec3(0f, 5f, -3f)),
+                Sphere(10f, Material(vec3(0.3f, 0.6f, 0.9f))).setTranslation(vec3(-10f, 2f, -2f)),
                 Line(vec4(0.0f, 0.0f, 5.0f, 0.0f), vec4(15.0f, 15.0f, -15.0f, 0.0f), 2.0f),
                 Box(vec4(-10.0f, -10.0f, 5.0f, 0.0f), vec3(5.0f, 5.0f, 5.0f)),
                 ShapeDifference(
                         ShapeIntersection(
-                                Sphere(vec3(20f, 0f, 0f).position(), 5f),
-                                Box(vec3(20f, 0f, 0f).position(), vec3(4f))
+                                Sphere(5f, Material(vec3(0.9f, 0.9f, 0.3f))),
+                                Box(vec3(0f, 0f, 0f).position(), vec3(4f), Material(vec3(0.9f, 0.3f, 0.9f)))
                         ),
-                        Sphere(vec3(20f, 0f, 0f).position(), 4.5f)
-                )
+                        Sphere(4.5f, Material(vec3(0.3f, 0.9f, 0.9f)))
+                ).setTranslation(vec3(20f, 0f, 0f))
         )
-        val shape: Shape = ShapeUnion(
+        var shape: Shape = ShapeUnion(
                 ShapeDissolve(
                         2f,
                         blend,
@@ -84,9 +82,11 @@ object Main {
             if (display.isKeyDown(GLFW_KEY_SPACE)) renderer!!.up(speed * dt)
             if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer!!.up(-speed * dt)
 
-            sphere.setPosition(vec4(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f, 0.0f))
-            sphere2.setPosition(sphere.getPosition())
-            blend.setFactor(1 + Math.sin(t.toDouble() * 10).toFloat() * 3)
+            sphere.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
+            sphere2.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
+            shape.rotateBy(vec3(0f, dt, 0f))
+            shape.setScale(1.4f + 0.5f * Math.sin(3 * t.toDouble()).toFloat())
+//            blend.setFactor(1 + Math.sin(t.toDouble() * 10).toFloat() * 3)
 
             println("FPS: ${1/dt}")
 

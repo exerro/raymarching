@@ -25,6 +25,127 @@ class mat4(vararg val elements: Float) {
             elements[3], elements[7], elements[11], elements[15]
     )
 
+    fun inverse(): mat4 {
+        val inv = FloatArray(16)
+        var i: Int
+
+        inv[0] = elements[5]  * elements[10] * elements[15] -
+                elements[5]  * elements[11] * elements[14] -
+                elements[9]  * elements[6]  * elements[15] +
+                elements[9]  * elements[7]  * elements[14] +
+                elements[13] * elements[6]  * elements[11] -
+                elements[13] * elements[7]  * elements[10];
+
+        inv[4] = -elements[4]  * elements[10] * elements[15] +
+                elements[4]  * elements[11] * elements[14] +
+                elements[8]  * elements[6]  * elements[15] -
+                elements[8]  * elements[7]  * elements[14] -
+                elements[12] * elements[6]  * elements[11] +
+                elements[12] * elements[7]  * elements[10];
+
+        inv[8] = elements[4]  * elements[9] * elements[15] -
+                elements[4]  * elements[11] * elements[13] -
+                elements[8]  * elements[5] * elements[15] +
+                elements[8]  * elements[7] * elements[13] +
+                elements[12] * elements[5] * elements[11] -
+                elements[12] * elements[7] * elements[9];
+
+        inv[12] = -elements[4]  * elements[9] * elements[14] +
+                elements[4]  * elements[10] * elements[13] +
+                elements[8]  * elements[5] * elements[14] -
+                elements[8]  * elements[6] * elements[13] -
+                elements[12] * elements[5] * elements[10] +
+                elements[12] * elements[6] * elements[9];
+
+        inv[1] = -elements[1]  * elements[10] * elements[15] +
+                elements[1]  * elements[11] * elements[14] +
+                elements[9]  * elements[2] * elements[15] -
+                elements[9]  * elements[3] * elements[14] -
+                elements[13] * elements[2] * elements[11] +
+                elements[13] * elements[3] * elements[10];
+
+        inv[5] = elements[0]  * elements[10] * elements[15] -
+                elements[0]  * elements[11] * elements[14] -
+                elements[8]  * elements[2] * elements[15] +
+                elements[8]  * elements[3] * elements[14] +
+                elements[12] * elements[2] * elements[11] -
+                elements[12] * elements[3] * elements[10];
+
+        inv[9] = -elements[0]  * elements[9] * elements[15] +
+                elements[0]  * elements[11] * elements[13] +
+                elements[8]  * elements[1] * elements[15] -
+                elements[8]  * elements[3] * elements[13] -
+                elements[12] * elements[1] * elements[11] +
+                elements[12] * elements[3] * elements[9];
+
+        inv[13] = elements[0]  * elements[9] * elements[14] -
+                elements[0]  * elements[10] * elements[13] -
+                elements[8]  * elements[1] * elements[14] +
+                elements[8]  * elements[2] * elements[13] +
+                elements[12] * elements[1] * elements[10] -
+                elements[12] * elements[2] * elements[9];
+
+        inv[2] = elements[1]  * elements[6] * elements[15] -
+                elements[1]  * elements[7] * elements[14] -
+                elements[5]  * elements[2] * elements[15] +
+                elements[5]  * elements[3] * elements[14] +
+                elements[13] * elements[2] * elements[7] -
+                elements[13] * elements[3] * elements[6];
+
+        inv[6] = -elements[0]  * elements[6] * elements[15] +
+                elements[0]  * elements[7] * elements[14] +
+                elements[4]  * elements[2] * elements[15] -
+                elements[4]  * elements[3] * elements[14] -
+                elements[12] * elements[2] * elements[7] +
+                elements[12] * elements[3] * elements[6];
+
+        inv[10] = elements[0]  * elements[5] * elements[15] -
+                elements[0]  * elements[7] * elements[13] -
+                elements[4]  * elements[1] * elements[15] +
+                elements[4]  * elements[3] * elements[13] +
+                elements[12] * elements[1] * elements[7] -
+                elements[12] * elements[3] * elements[5];
+
+        inv[14] = -elements[0]  * elements[5] * elements[14] +
+                elements[0]  * elements[6] * elements[13] +
+                elements[4]  * elements[1] * elements[14] -
+                elements[4]  * elements[2] * elements[13] -
+                elements[12] * elements[1] * elements[6] +
+                elements[12] * elements[2] * elements[5];
+
+        inv[3] = -elements[1] * elements[6] * elements[11] +
+                elements[1] * elements[7] * elements[10] +
+                elements[5] * elements[2] * elements[11] -
+                elements[5] * elements[3] * elements[10] -
+                elements[9] * elements[2] * elements[7] +
+                elements[9] * elements[3] * elements[6];
+
+        inv[7] = elements[0] * elements[6] * elements[11] -
+                elements[0] * elements[7] * elements[10] -
+                elements[4] * elements[2] * elements[11] +
+                elements[4] * elements[3] * elements[10] +
+                elements[8] * elements[2] * elements[7] -
+                elements[8] * elements[3] * elements[6];
+
+        inv[11] = -elements[0] * elements[5] * elements[11] +
+                elements[0] * elements[7] * elements[9] +
+                elements[4] * elements[1] * elements[11] -
+                elements[4] * elements[3] * elements[9] -
+                elements[8] * elements[1] * elements[7] +
+                elements[8] * elements[3] * elements[5];
+
+        inv[15] = elements[0] * elements[5] * elements[10] -
+                elements[0] * elements[6] * elements[9] -
+                elements[4] * elements[1] * elements[10] +
+                elements[4] * elements[2] * elements[9] +
+                elements[8] * elements[1] * elements[6] -
+                elements[8] * elements[2] * elements[5];
+
+        val det = 1 / (elements[0] * inv[0] + elements[1] * inv[4] + elements[2] * inv[8] + elements[3] * inv[12])
+
+        return mat4(*inv.map { det * it }.toFloatArray())
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -49,9 +170,9 @@ val mat4_identity = mat4(
 )
 
 fun mat4_translate(translation: vec3) = mat4(
-        0.0f, 0.0f, 0.0f, translation.x,
-        0.0f, 0.0f, 0.0f, translation.y,
-        0.0f, 0.0f, 0.0f, translation.z,
+        1.0f, 0.0f, 0.0f, translation.x,
+        0.0f, 1.0f, 0.0f, translation.y,
+        0.0f, 0.0f, 1.0f, translation.z,
         0.0f, 0.0f, 0.0f, 1.0f
 )
 

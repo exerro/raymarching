@@ -1,11 +1,55 @@
 package shape
 
 import gl.GLShaderProgram
-import util.vec2
-import util.vec3
-import util.vec4
+import util.*
 
-abstract class Shape {
+sealed class Shape {
+    private var translation: vec3 = vec3(0f, 0f, 0f)
+    private var rotation: vec3 = vec3(0f, 0f, 0f)
+    private var scale: vec3 = vec3(1f, 1f, 1f)
+
+    fun setTranslation(translation: vec3): Shape {
+        this.translation = translation
+        return this
+    }
+
+    fun translateBy(translation: vec3): Shape {
+        this.translation = this.translation.add(translation)
+        return this
+    }
+
+    fun setRotation(rotation: vec3): Shape {
+        this.rotation = rotation
+        return this
+    }
+
+    fun rotateBy(rotation: vec3): Shape {
+        this.rotation = this.rotation.add(rotation)
+        return this
+    }
+
+    fun setScale(scale: Float): Shape {
+        this.scale = vec3(scale)
+        return this
+    }
+
+    fun scaleBy(scale: Float): Shape {
+        this.scale = this.scale.mul(scale)
+        return this
+    }
+
+//    fun setScale(scale: vec3): Shape {
+//        this.scale = scale
+//        return this
+//    }
+//
+//    fun scaleBy(scale: vec3): Shape {
+//        this.scale = this.scale.mul(scale)
+//        return this
+//    }
+
+    fun getTransformation(): mat4 = mat4_translate(translation).mul(rotation.toRotationMatrix()).mul(mat4_scale(scale))
+
     /**
      * Returns a header to be prepended to shader code, useful for defining a function
      */
@@ -28,7 +72,7 @@ abstract class MaterialShape(val material: Material): Shape() {
      * Returns GLSL code to compute the distance to the object and material properties
      */
     override fun getFunction(): String {
-        return "DistanceData(\$material, ${getDistanceFunction()})"
+        return "DistanceData(\$material, (${getDistanceFunction()}) * \$transformation_scale)"
     }
 }
 
