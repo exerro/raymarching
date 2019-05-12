@@ -1,4 +1,7 @@
-import display.Display
+import gl.Display
+import gl.Draw
+import gl.GBuffer
+import gl.debugDraw
 import gl.loadShaderProgram
 import org.lwjgl.glfw.GLFW.*
 import shape.*
@@ -43,8 +46,9 @@ object Main {
                 sphere2
         )
         val vertexShader = compiler.buildVertexShader()
-        val fragmentShader = compiler.buildFragmentShader(shape)
+        val fragmentShader = compiler.buildBufferedFragmentShader(shape)
         var renderer: ShapeRenderer? = null
+        var buffer: GBuffer? = null
 
         println(fragmentShader)
 
@@ -66,12 +70,17 @@ object Main {
         }
 
         display.onLoadCallback = {
+            Draw.init()
+
             renderer = ShapeRenderer(
-                    WIDTH.toFloat()/HEIGHT,
                     loadShaderProgram(vertexShader, fragmentShader),
                     shape,
-                    compiler.lookup
+                    compiler.lookup,
+                    WIDTH,
+                    HEIGHT
             )
+
+            buffer = GBuffer(WIDTH, HEIGHT)
         }
 
         display.onResizedCallback = { width, height ->
@@ -98,7 +107,9 @@ object Main {
         }
 
         display.onDrawCallback = {
-            renderer!!.renderToScreen()
+            renderer?.renderToBuffer(buffer!!)
+            buffer?.debugDraw()
+//            renderer!!.renderToScreen()
         }
 
         display.run()

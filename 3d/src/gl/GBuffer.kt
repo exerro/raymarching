@@ -4,8 +4,9 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
 
 import org.lwjgl.opengl.GL30.*
+import util.vec2
 
-class GBuffer(width: Int, height: Int): GLResource {
+class GBuffer(val width: Int, val height: Int): GLResource {
     private val fbo = FBO(width, height)
     val colourTexture = fbo.attachTexture(createEmptyTexture(width, height), GL_COLOR_ATTACHMENT0)
     val positionTexture = fbo.attachTexture(createEmptyTexture(width, height, GL_RGB32F, GL11.GL_RGB, GL11.GL_FLOAT), GL_COLOR_ATTACHMENT1)
@@ -61,4 +62,12 @@ class GBuffer(width: Int, height: Int): GLResource {
         lightingTexture.destroy()
     }
 
+}
+
+fun GBuffer.debugDraw() {
+    Draw.setViewport(vec2(width.toFloat(), height.toFloat()))
+    Draw.texture(colourTexture, vec2(0f, 0f), vec2(0.5f, 0.5f))
+    Draw.texture(normalTexture, vec2(width / 2f, height / 2f), vec2(0.5f, 0.5f))
+    Draw.texture(positionTexture, vec2(0f, height / 2f), vec2(0.5f, 0.5f))
+    Draw.texture(depthTexture, vec2(width / 2f, 0f), vec2(0.5f, 0.5f))
 }

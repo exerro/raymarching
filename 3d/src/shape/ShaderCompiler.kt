@@ -48,9 +48,9 @@ class ShaderCompiler {
               "\n\n" +
               lookup.transformationNames.map { (_, name) -> "uniform mat4 $name; uniform float ${name}_scale;" } .joinToString("\n")
 
-    fun buildFragmentShader(shape: Shape): String {
+    fun buildBufferedFragmentShader(shape: Shape): String {
         val distance_function = compileShapeFunction(shape)
-        return String(Files.readAllBytes(Paths.get("src/glsl/fragment.glsl")))
+        return String(Files.readAllBytes(Paths.get("src/glsl/fragment-buffer.glsl")))
                 .replace("/*\$header*/", buildHeader())
                 .replace("/*\$distance_function*/", distance_function)
     }
@@ -58,6 +58,13 @@ class ShaderCompiler {
     fun buildVertexShader(): String {
         return String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
     }
+
+//    fun buildFragmentShader(shape: Shape): String {
+//        val distance_function = compileShapeFunction(shape)
+//        return String(Files.readAllBytes(Paths.get("src/glsl/fragment-screen.glsl")))
+//                .replace("/*\$header*/", buildHeader())
+//                .replace("/*\$distance_function*/", distance_function)
+//    }
 }
 
 class UniformNameLookup {

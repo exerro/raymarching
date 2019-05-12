@@ -18,6 +18,9 @@ class mat4(vararg val elements: Float) {
             elements[12] * v.x + elements[13] * v.y + elements[14] * v.z + elements[15] * v.w
     )
 
+    fun translateBy(translation: vec3): mat4 = mul(mat4_translate(translation))
+    fun scaleBy(scale: vec3): mat4 = mul(mat4_scale(scale))
+
     fun transpose(): mat4 = mat4(
             elements[0], elements[4], elements[8],  elements[12],
             elements[1], elements[5], elements[9],  elements[13],

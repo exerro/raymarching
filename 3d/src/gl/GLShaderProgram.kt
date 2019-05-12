@@ -108,6 +108,7 @@ private fun loadShader(shaderContent: String, shaderType: Int): Int {
     GL20.glCompileShader(shaderID)
 
     if (GL20.glGetShaderi(shaderID, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
+        System.err.println(shaderContent)
         throw ShaderLoadException(shaderID, shaderContent)
     }
 

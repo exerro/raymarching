@@ -1,11 +1,13 @@
 package shape
 
+import gl.GBuffer
 import gl.GLShaderProgram
 import gl.screen_quad
 import org.lwjgl.opengl.GL11
 import util.*
 
-class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val shape: Shape, val lookupUniform: UniformNameLookup) {
+class ShapeRenderer(val shader: GLShaderProgram, val shape: Shape, val lookupUniform: UniformNameLookup, width: Int, height: Int) {
+    var aspectRatio = width.toFloat() / height
     var FOV: Float = 70.0f
     var position = vec3(0.0f, 0.0f, 30.0f)
     var rotation = vec3(0f, 0f, 0f)
@@ -35,6 +37,30 @@ class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val sha
     }
 
     fun renderToScreen() {
+        setUniforms()
+        shader.start()
+        screen_quad.load()
+        GL11.glDrawElements(GL11.GL_TRIANGLES, screen_quad.vertexCount, GL11.GL_UNSIGNED_INT, 0)
+        screen_quad.unload()
+        shader.stop()
+    }
+
+    fun renderToBuffer(buffer: GBuffer) {
+        setUniforms()
+        buffer.bind()
+        shader.start()
+        screen_quad.load()
+        GL11.glDrawElements(GL11.GL_TRIANGLES, screen_quad.vertexCount, GL11.GL_UNSIGNED_INT, 0)
+        screen_quad.unload()
+        shader.stop()
+        buffer.unbind()
+    }
+
+    fun getFacing(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 0f, -1f).direction()).vec3()
+    fun getUp(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 1f, 0f).direction()).vec3()
+    fun getRight(): vec3 = rotation.toRotationMatrix().mul(vec3(1f, 0f, 0f).direction()).vec3()
+
+    private fun setUniforms() {
         shader.setUniform("ray_position", position.position())
         shader.setUniform("transform", rotation.toRotationMatrix())
         shader.setUniform("aspectRatio", aspectRatio)
@@ -46,16 +72,7 @@ class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val sha
             value.getMaterial().setUniforms(shader, name)
         }
         setTransformationUniforms(shape, mat4_identity)
-        shader.start()
-        screen_quad.load()
-        GL11.glDrawElements(GL11.GL_TRIANGLES, screen_quad.vertexCount, GL11.GL_UNSIGNED_INT, 0)
-        screen_quad.unload()
-        shader.stop()
     }
-
-    fun getFacing(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 0f, -1f).direction()).vec3()
-    fun getUp(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 1f, 0f).direction()).vec3()
-    fun getRight(): vec3 = rotation.toRotationMatrix().mul(vec3(1f, 0f, 0f).direction()).vec3()
 
     private fun setTransformationUniforms(shape: Shape, transform: mat4) {
         val this_transform = transform.mul(shape.getTransformation())
