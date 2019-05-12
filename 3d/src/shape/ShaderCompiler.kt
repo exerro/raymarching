@@ -59,12 +59,12 @@ class ShaderCompiler {
         return String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
     }
 
-//    fun buildFragmentShader(shape: Shape): String {
-//        val distance_function = compileShapeFunction(shape)
-//        return String(Files.readAllBytes(Paths.get("src/glsl/fragment-screen.glsl")))
-//                .replace("/*\$header*/", buildHeader())
-//                .replace("/*\$distance_function*/", distance_function)
-//    }
+    fun buildFragmentShader(shape: Shape): String {
+        val distance_function = compileShapeFunction(shape)
+        return String(Files.readAllBytes(Paths.get("src/glsl/fragment-screen.glsl")))
+                .replace("/*\$header*/", buildHeader())
+                .replace("/*\$distance_function*/", distance_function)
+    }
 }
 
 class UniformNameLookup {

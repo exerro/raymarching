@@ -27,6 +27,7 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
     var onUpdateCallback: ((Float) -> Unit)? = null
     var onDrawCallback: (() -> Unit)? = null
     var onLoadCallback: (() -> Unit)? = null
+    var onUnloadCallback: (() -> Unit)? = null
 
     fun setMouseLocked(locked: Boolean) {
         whenSetup {
@@ -84,6 +85,7 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
 
         // run the rendering loop until the user has attempted to close the window or has pressed the ESCAPE key
         while (running && !glfwWindowShouldClose(window)) {
+            updateGLViewport()
             // set the clear colour to black and clear the framebuffer
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
@@ -104,9 +106,12 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
             glfwPollEvents()
         }
 
+        onUnloadCallback?.invoke()
+
         destroy()
         glfwTerminate()
         glfwSetErrorCallback(null)!!.free()
+
     }
 
     override fun destroy() {
@@ -145,6 +150,7 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
         glfwShowWindow(window) // make the window visible
 
         GL.createCapabilities() // makes OpenGL bindings available to use from LWJGL
+        Draw.init()
 
         setCallbacks() // sets the GLFW callbacks to use the custom callbacks above
         updateGLViewport() // update the GL viewport to set it up initially
@@ -197,6 +203,9 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
         val height = IntArray(1)
         glfwGetFramebufferSize(window, width, height)
         glViewport(0, 0, width[0], height[0])
+        this.width = width[0]
+        this.height = height[0]
+        Draw.setViewport(vec2(width[0].toFloat(), height[0].toFloat()))
     }
 
     private fun whenSetup(func: () -> Unit) {

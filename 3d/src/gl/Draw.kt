@@ -5,24 +5,30 @@ import util.vec2
 import util.vec3
 
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL31.glDrawElementsInstanced
 import util.mat4_identity
 
-object Draw {
+object Draw: GLResource{
 
     private var rectangleVAO: VAO? = null
     private var shaderProgram2D: GLShaderProgram? = null
     private var colour = vec3(1f, 1f, 1f)
-    var viewportSize: vec2 = vec2(0f, 0f)
-        private set
+    private val viewportSizes = ArrayList<vec2>()
+    private val viewportSize: vec2
+        get() = viewportSizes[viewportSizes.size - 1]
 
     internal fun setViewport(size: vec2) {
-        viewportSize = size
+        viewportSizes.clear()
+        viewportSizes.add(size)
+    }
+
+    internal fun pushViewport(size: vec2) {
+        viewportSizes.add(size)
         glViewport(0, 0, size.x.toInt(), size.y.toInt())
     }
 
-    fun setColour(colour: vec3) {
-        Draw.colour = colour
+    internal fun popViewport() {
+        viewportSizes.removeAt(viewportSizes.size - 1)
+        glViewport(0, 0, viewportSize.x.toInt(), viewportSize.y.toInt())
     }
 
     fun setColour(r: Float, g: Float, b: Float) {
@@ -39,10 +45,6 @@ object Draw {
                 .scaleBy(size.vec3(1f))
 
         draw2D(null, rectangleVAO, transform)
-    }
-
-    fun rectangle(x: Float, y: Float, width: Float, height: Float) {
-        rectangle(vec2(x, y), vec2(width, height))
     }
 
     @JvmOverloads
@@ -75,10 +77,6 @@ object Draw {
         draw2D(texture, rectangleVAO, transform)
     }
 
-    fun image(texture: Texture, x: Float, y: Float) {
-        image(texture, vec2(x, y), vec2(1f, 1f))
-    }
-
     //    public static void text(Text text, vec2 position) {
     //        var displaySize = getViewportSize();
     //        var transform   = mat4.identity()
@@ -106,12 +104,6 @@ object Draw {
     fun drawIndexedVAO(vao: VAO) {
         vao.load()
         glDrawElements(GL_TRIANGLES, vao.vertexCount, GL_UNSIGNED_INT, 0)
-        vao.unload()
-    }
-
-    fun drawIndexedInstancedVAO(vao: VAO) {
-        vao.load()
-        glDrawElementsInstanced(GL_TRIANGLES, vao.vertexCount, GL_UNSIGNED_INT, 0, vao.instanceCount)
         vao.unload()
     }
 
@@ -159,7 +151,7 @@ object Draw {
         }
     }
 
-    fun destroy() {
+    override fun destroy() {
         rectangleVAO!!.destroy()
         shaderProgram2D!!.destroy()
     }

@@ -29,29 +29,25 @@ class GBuffer(val width: Int, val height: Int): GLResource {
     }
 
     fun bindReading() {
-        for (i in 0..3) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, colourTexture.textureID)
-            GL13.glActiveTexture(GL13.GL_TEXTURE1)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, positionTexture.textureID)
-            GL13.glActiveTexture(GL13.GL_TEXTURE2)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, normalTexture.textureID)
-            GL13.glActiveTexture(GL13.GL_TEXTURE3)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, lightingTexture.textureID)
-        }
+        GL13.glActiveTexture(GL13.GL_TEXTURE0)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, colourTexture.textureID)
+        GL13.glActiveTexture(GL13.GL_TEXTURE1)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, positionTexture.textureID)
+        GL13.glActiveTexture(GL13.GL_TEXTURE2)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, normalTexture.textureID)
+        GL13.glActiveTexture(GL13.GL_TEXTURE3)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, lightingTexture.textureID)
     }
 
     fun unbindReading() {
-        for (i in 0..3) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
-            GL13.glActiveTexture(GL13.GL_TEXTURE1)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
-            GL13.glActiveTexture(GL13.GL_TEXTURE2)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
-            GL13.glActiveTexture(GL13.GL_TEXTURE3)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
-        }
+        GL13.glActiveTexture(GL13.GL_TEXTURE0)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+        GL13.glActiveTexture(GL13.GL_TEXTURE1)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+        GL13.glActiveTexture(GL13.GL_TEXTURE2)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+        GL13.glActiveTexture(GL13.GL_TEXTURE3)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
     }
 
     override fun destroy() {
@@ -65,7 +61,6 @@ class GBuffer(val width: Int, val height: Int): GLResource {
 }
 
 fun GBuffer.debugDraw() {
-    Draw.setViewport(vec2(width.toFloat(), height.toFloat()))
     Draw.texture(colourTexture, vec2(0f, 0f), vec2(0.5f, 0.5f))
     Draw.texture(normalTexture, vec2(width / 2f, height / 2f), vec2(0.5f, 0.5f))
     Draw.texture(positionTexture, vec2(0f, height / 2f), vec2(0.5f, 0.5f))
