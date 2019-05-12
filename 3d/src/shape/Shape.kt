@@ -66,7 +66,28 @@ sealed class Shape {
     abstract fun getUniforms(): Map<String, ShapeUniformValue>
 }
 
-abstract class MaterialShape(val material: Material): Shape() {
+abstract class MaterialShape(material: Material): Shape() {
+    private var material: Material = material
+
+    fun getMaterial(): Material = material
+
+    fun setMaterial(material: Material): MaterialShape {
+        this.material = material
+        return this
+    }
+
+    fun getColour(): vec4 = material.colour
+
+    fun setColour(colour: vec4): MaterialShape {
+        this.material.colour = colour
+        return this
+    }
+
+    fun setColour(r: Float, g: Float, b: Float): MaterialShape {
+        this.material.colour = vec4(r, g, b, 1f)
+        return this
+    }
+
     abstract fun getDistanceFunction(): String
     /**
      * Returns GLSL code to compute the distance to the object and material properties

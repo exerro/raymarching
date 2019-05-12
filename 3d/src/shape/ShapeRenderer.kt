@@ -43,7 +43,7 @@ class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val sha
             value.setUniform(shader, name)
         }
         lookupUniform.materialNames.map { (value, name) ->
-            value.material.setUniforms(shader, name)
+            value.getMaterial().setUniforms(shader, name)
         }
         setTransformationUniforms(shape, mat4_identity)
         shader.start()
