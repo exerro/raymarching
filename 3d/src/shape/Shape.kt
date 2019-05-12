@@ -9,17 +9,27 @@ abstract class Shape {
     /**
      * Returns a header to be prepended to shader code, useful for defining a function
      */
-    abstract fun getDistanceFunctionHeader(): String?
+    abstract fun getHeader(): String?
 
     /**
-     * Returns GLSL code to compute the distance to the object
+     * Returns GLSL code to compute the distance to the object and material properties
      */
-    abstract fun getDistanceFunction(): String
+    abstract fun getFunction(): String
 
     /**
      * Return a list of uniform values
      */
     abstract fun getUniforms(): Map<String, ShapeUniformValue>
+}
+
+abstract class MaterialShape(val material: Material): Shape() {
+    abstract fun getDistanceFunction(): String
+    /**
+     * Returns GLSL code to compute the distance to the object and material properties
+     */
+    override fun getFunction(): String {
+        return "DistanceData(\$material, ${getDistanceFunction()})"
+    }
 }
 
 abstract class ShapeContainer: Shape() {

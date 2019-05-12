@@ -15,13 +15,13 @@ object Main {
     fun main(args: Array<String>) {
         val display = Display(WIDTH, HEIGHT)
         val compiler = ShaderCompiler()
-        val sphere = Sphere(vec4(-4f, 2f, 0f, 0f), 8f)
-        val sphere2 = Sphere(vec4(-4f, 2f, 0f, 0f), 6f)
-        val blend: ShapeBlend = ShapeBlend(
+        val sphere = Sphere(vec4(-4f, 2f, 0f, 0f), 8f, Material(vec4(0.3f, 0.9f, 0.6f, 1f)))
+        val sphere2 = Sphere(vec4(-4f, 2f, 0f, 0f), 6f, Material(vec4(1f, 0f, 0f, 1f)))
+        val blend = ShapeBlend(
                 2.0f,
-                Sphere(vec4(4f, -3f, 0f, 0f), 6f),
-                Sphere(vec4(0f, 5f, -3f, 0f), 8f),
-                Sphere(vec4(-10f, 2f, -2f, 0f), 10f),
+                Sphere(vec4(4f, -3f, 0f, 0f), 6f, Material(vec4(0.3f, 0.6f, 0.9f, 1f))),
+                Sphere(vec4(0f, 5f, -3f, 0f), 8f, Material(vec4(0.3f, 0.6f, 0.9f, 1f))),
+                Sphere(vec4(-10f, 2f, -2f, 0f), 10f, Material(vec4(0.3f, 0.6f, 0.9f, 1f))),
                 Line(vec4(0.0f, 0.0f, 5.0f, 0.0f), vec4(15.0f, 15.0f, -15.0f, 0.0f), 2.0f),
                 Box(vec4(-10.0f, -10.0f, 5.0f, 0.0f), vec3(5.0f, 5.0f, 5.0f)),
                 ShapeDifference(
@@ -43,6 +43,8 @@ object Main {
         val vertexShader = compiler.buildVertexShader()
         val fragmentShader = compiler.buildFragmentShader(shape)
         var renderer: ShapeRenderer? = null
+
+        println(fragmentShader)
 
         val speed = 50f
 
@@ -66,7 +68,7 @@ object Main {
                     WIDTH.toFloat()/HEIGHT,
                     loadShaderProgram(vertexShader, fragmentShader),
                     shape,
-                    compiler.uniformValueLookups
+                    compiler.lookup
             )
         }
 
@@ -82,7 +84,7 @@ object Main {
             if (display.isKeyDown(GLFW_KEY_SPACE)) renderer!!.up(speed * dt)
             if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer!!.up(-speed * dt)
 
-            sphere.setPosition(vec4(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 4, 0.0f, 0.0f))
+            sphere.setPosition(vec4(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f, 0.0f))
             sphere2.setPosition(sphere.getPosition())
             blend.setFactor(1 + Math.sin(t.toDouble() * 10).toFloat() * 3)
 

@@ -3,11 +3,11 @@ package shape
 import util.vec3
 import util.vec4
 
-class Box(center: vec4, size: vec3) : Shape() {
+class Box(center: vec4, size: vec3, material: Material = default_material) : MaterialShape(material) {
     private val centerUniform = Vec4ShapeUniformValue(center)
     private val sizeUniform = Vec3ShapeUniformValue(size)
 
-    override fun getDistanceFunctionHeader(): String?
+    override fun getHeader(): String?
             = "float sdBox( vec3 p, vec3 b ) {\n" +
                 "\tvec3 d = abs(p) - b;\n" +
                 "\treturn length(max(d,0.0))\n" +

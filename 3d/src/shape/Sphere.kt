@@ -2,7 +2,7 @@ package shape
 
 import util.vec4
 
-class Sphere(position: vec4, radius: Float) : Shape() {
+class Sphere(position: vec4, radius: Float, material: Material = default_material) : MaterialShape(material) {
     private val positionUniform: Vec4ShapeUniformValue = Vec4ShapeUniformValue(position)
     private val radiusUniform: FloatShapeUniformValue = FloatShapeUniformValue(radius)
 
@@ -17,7 +17,7 @@ class Sphere(position: vec4, radius: Float) : Shape() {
         radiusUniform.data = radius
     }
 
-    override fun getDistanceFunctionHeader(): String?
+    override fun getHeader(): String?
             = null
 
     override fun getDistanceFunction(): String

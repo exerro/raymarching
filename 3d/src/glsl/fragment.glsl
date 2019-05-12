@@ -4,6 +4,15 @@ const int MAX_ITERATIONS = 255;
 const float EPSILON = 0.0001;
 const vec4 LIGHT_POSITION = normalize(vec4(2, 3, 1, 0));
 
+struct Material {
+	vec4 colour;
+};
+
+struct DistanceData {
+	Material material;
+	float distance;
+};
+
 in vec2 uv;
 
 uniform vec4 ray_position;
@@ -22,15 +31,15 @@ float lighting(vec4 position, vec3 normal) {
 	return ambient + diffuse + specular;
 }
 
-float distance_function(vec4 ray_position) {
+DistanceData distance_function(vec4 ray_position) {
 	return 0/*$distance_function*/;
 }
 
 vec3 estimateNormal(vec4 p) {
 	return normalize(vec3(
-		distance_function(vec4(p.x + EPSILON, p.y, p.z, 1)) - distance_function(vec4(p.x - EPSILON, p.y, p.z, 1)),
-		distance_function(vec4(p.x, p.y + EPSILON, p.z, 1)) - distance_function(vec4(p.x, p.y - EPSILON, p.z, 1)),
-		distance_function(vec4(p.x, p.y, p.z  + EPSILON, 1)) - distance_function(vec4(p.x, p.y, p.z - EPSILON, 1))
+		distance_function(vec4(p.x + EPSILON, p.y, p.z, 1)).distance - distance_function(vec4(p.x - EPSILON, p.y, p.z, 1)).distance,
+		distance_function(vec4(p.x, p.y + EPSILON, p.z, 1)).distance - distance_function(vec4(p.x, p.y - EPSILON, p.z, 1)).distance,
+		distance_function(vec4(p.x, p.y, p.z  + EPSILON, 1)).distance - distance_function(vec4(p.x, p.y, p.z - EPSILON, 1)).distance
 	));
 }
 
@@ -40,12 +49,14 @@ void main(void) {
 	float total_distance = 0;
 
 	for (int i = 0; i < MAX_ITERATIONS && total_distance < 1000; ++i) {
-		float distance = distance_function(rp);
+		DistanceData data = distance_function(rp);
+		float distance = data.distance;
+		vec4 colour = data.material.colour;
 		total_distance += distance;
 		rp += rd * distance;
 
 		if (abs(distance) < 0.001) {
-			gl_FragColor = vec4(vec3(lighting(rp, estimateNormal(rp))), 1);
+			gl_FragColor = colour * vec4(vec3(lighting(rp, estimateNormal(rp))), 1);
 			return;
 		}
 	}

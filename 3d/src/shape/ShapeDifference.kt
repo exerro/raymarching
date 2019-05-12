@@ -1,11 +1,13 @@
 package shape
 
 class ShapeDifference(private val a: Shape, private val b: Shape): ShapeContainer() {
-    override fun getDistanceFunctionHeader(): String?
-            = null
+    override fun getHeader(): String?
+            = "DistanceData sdDifference(DistanceData a, DistanceData b) {\n" +
+            "\treturn a.distance > -b.distance ? a : DistanceData(b.material, -b.distance);\n" +
+            "}"
 
-    override fun getDistanceFunction(): String
-            = "max($1, -($2))"
+    override fun getFunction(): String
+            = "sdDifference($1, $2)"
 
     override fun getUniforms(): Map<String, ShapeUniformValue>
             = mapOf()

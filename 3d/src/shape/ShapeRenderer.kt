@@ -5,7 +5,7 @@ import gl.screen_quad
 import org.lwjgl.opengl.GL11
 import util.*
 
-class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val shape: Shape, val uniforms: Map<ShapeUniformValue, String>) {
+class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val shape: Shape, val lookup: NameLookup) {
     var FOV: Float = 70.0f
     var position = vec3(0.0f, 0.0f, 30.0f)
     var rotation = vec3(0f, 0f, 0f)
@@ -39,8 +39,11 @@ class ShapeRenderer(var aspectRatio: Float, val shader: GLShaderProgram, val sha
         shader.setUniform("transform", rotation.toRotationMatrix())
         shader.setUniform("aspectRatio", aspectRatio)
         shader.setUniform("FOV", FOV * Math.PI.toFloat() / 180.0f)
-        uniforms.map { (value, name) ->
+        lookup.uniformValues.map { (value, name) ->
             value.setUniform(shader, name)
+        }
+        lookup.materials.map { (value, name) ->
+            value.material.setUniforms(shader, name)
         }
         shader.start()
         screen_quad.load()

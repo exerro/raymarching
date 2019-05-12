@@ -2,7 +2,7 @@ package shape
 
 import util.vec4
 
-class Line(a: vec4, b: vec4, radius: Float) : Shape() {
+class Line(a: vec4, b: vec4, radius: Float, material: Material = default_material) : MaterialShape(material) {
     private val positionAUniform: Vec4ShapeUniformValue = Vec4ShapeUniformValue(a)
     private val positionBUniform: Vec4ShapeUniformValue = Vec4ShapeUniformValue(b)
     private val radiusUniform: FloatShapeUniformValue = FloatShapeUniformValue(radius)
@@ -23,7 +23,7 @@ class Line(a: vec4, b: vec4, radius: Float) : Shape() {
         radiusUniform.data = radius
     }
 
-    override fun getDistanceFunctionHeader(): String?
+    override fun getHeader(): String?
             = "float sdLine(vec3 p, vec3 a, vec3 b, float r) {\n" +
                 "\tvec3 pa = p - a, ba = b - a;\n" +
                 "\tfloat h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );\n" +
