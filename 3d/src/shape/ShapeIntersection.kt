@@ -1,21 +1,15 @@
 package shape
 
-class ShapeIntersection(val a: Shape, val b: Shape): ShapeContainer() {
+class ShapeIntersection(private vararg val children: Shape): ShapeContainer() {
     override fun getDistanceFunctionHeader(): String?
             = null
 
     override fun getDistanceFunction(): String
-            = "max($1, $2)"
+            = (2 .. children.size).fold("\$1") { acc, i -> "max($acc, \$$i)" }
 
     override fun getUniforms(): Map<String, ShapeUniformValue>
             = mapOf()
 
     override fun getChildren(): List<Shape>
-            = listOf(a, b)
-}
-
-fun intersectionOfShapes(shape: Shape, vararg shapes: Shape): Shape {
-    if (shapes.isEmpty()) return shape
-
-    return shapes.fold(shape) { a, b -> ShapeIntersection(a, b) }
+            = children.toList()
 }

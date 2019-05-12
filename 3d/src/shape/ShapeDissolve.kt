@@ -1,7 +1,7 @@
 package shape
 
-class ShapeDissolve(val a: Shape, val b: Shape, factor: Float): ShapeContainer() {
-    val factorUniform = FloatShapeUniformValue(factor)
+class ShapeDissolve(factor: Float, private val a: Shape, private val b: Shape): ShapeContainer() {
+    private val factorUniform = FloatShapeUniformValue(factor)
 
     fun getFactor(): Float = factorUniform.data
 
@@ -23,9 +23,4 @@ class ShapeDissolve(val a: Shape, val b: Shape, factor: Float): ShapeContainer()
 
     override fun getChildren(): List<Shape>
             = listOf(a, b)
-}
-
-fun dissolveOfShapes(factor: Float, shape: Shape, vararg shapes: Shape): Shape {
-    if (shapes.isEmpty()) return shape
-    return shapes.fold(shape) { a, b -> ShapeDissolve(a, b, factor) }
 }

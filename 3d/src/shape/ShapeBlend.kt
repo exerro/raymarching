@@ -1,7 +1,7 @@
 package shape
 
-class ShapeBlend(val a: Shape, val b: Shape, factor: Float): ShapeContainer() {
-    val factorUniform = FloatShapeUniformValue(factor)
+class ShapeBlend(factor: Float, private vararg val children: Shape): ShapeContainer() {
+    private val factorUniform = FloatShapeUniformValue(factor)
 
     fun getFactor(): Float = factorUniform.data
 
@@ -16,16 +16,11 @@ class ShapeBlend(val a: Shape, val b: Shape, factor: Float): ShapeContainer() {
             "}"
 
     override fun getDistanceFunction(): String
-            = "smoothMin(\$1, \$2, \$factor)"
+            = (2 .. children.size).fold("\$1") { acc, i -> "smoothMin($acc, \$$i, \$factor)" }
 
     override fun getUniforms(): Map<String, ShapeUniformValue>
             = mapOf("factor" to factorUniform)
 
     override fun getChildren(): List<Shape>
-            = listOf(a, b)
-}
-
-fun blendOfShapes(factor: Float, shape: Shape, vararg shapes: Shape): Shape {
-    if (shapes.isEmpty()) return shape
-    return shapes.fold(shape) { a, b -> ShapeBlend(a, b, factor) }
+            = children.toList()
 }

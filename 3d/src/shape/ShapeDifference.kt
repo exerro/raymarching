@@ -1,6 +1,6 @@
 package shape
 
-class ShapeDifference(val a: Shape, val b: Shape): ShapeContainer() {
+class ShapeDifference(private val a: Shape, private val b: Shape): ShapeContainer() {
     override fun getDistanceFunctionHeader(): String?
             = null
 
@@ -12,10 +12,4 @@ class ShapeDifference(val a: Shape, val b: Shape): ShapeContainer() {
 
     override fun getChildren(): List<Shape>
             = listOf(a, b)
-}
-
-fun differenceOfShapes(shape: Shape, vararg shapes: Shape): Shape {
-    if (shapes.isEmpty()) return shape
-
-    return shapes.fold(shape) { a, b -> ShapeDifference(a, b) }
 }
