@@ -41,6 +41,7 @@ abstract class ShapeContainer: Shape() {
 
 fun <S: Shape> S.setTranslation(translation: vec3): S {
     transform.position = translation
+    this.transform.notifyChanged()
     return this
 }
 
@@ -49,6 +50,7 @@ fun <S: Shape> S.translateBy(translation: vec3): S
 
 fun <S: Shape> S.setRotation(rotation: vec3): S {
     this.transform.rotation = rotation
+    this.transform.notifyChanged()
     return this
 }
 
@@ -57,6 +59,7 @@ fun <S: Shape> S.rotateBy(rotation: vec3): S
 
 fun <S: Shape> S.setScale(scale: vec3): S {
     transform.scale = scale
+    this.transform.notifyChanged()
     return this
 }
 

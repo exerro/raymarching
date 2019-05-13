@@ -163,7 +163,7 @@ class ShaderCompiler: RootBuilder() {
             acc.replace("\$$name", if (value.isDynamic()) lookup.valueNames[value]!! else value.getGLSLValue())
         }
         val propertiesRemapped = uniformsRemapped
-                .replace("\$position", transformPosition("position", shape, ti))
+                .replace("\$position", transformPosition(shape, ti))
 
         return if (shape is ShapeContainer) {
             val children = shape.getChildren().map { child -> buildChild(child, TransformInfo(child.transform, ti)) }
@@ -188,41 +188,37 @@ class ShaderCompiler: RootBuilder() {
         }
     }
 
-    private fun transformPosition(value: String, shape: Shape, ti: TransformInfo): String {
+    private fun transformPosition(shape: Shape, ti: TransformInfo): String {
         return if (ti.dynamicOrRotated) {
             "(${lookup.shapeNames[shape]!!}_transform * vec4(position, 1)).xyz"
         }
         else if (ti.scaled && ti.translated) {
             val pos = ti.getTranslation()
             val scale = ti.getScale()
-            "(($value " +
+            "((position " +
                     "- vec3(${pos.x}, ${pos.y}, ${pos.z})) " +
                     "* vec3(${1/scale.x}, ${1/scale.y}, ${1/scale.z}))"
         }
         else if (ti.scaled) {
             val scale = ti.getScale()
-            "($value " +
+            "(position " +
                     "* vec3(${1/scale.x}, ${1/scale.y}, ${1/scale.z}))"
         }
         else if (ti.translated) {
             val pos = ti.getTranslation()
-            "($value " +
+            "(position " +
                     "- vec3(${pos.x}, ${pos.y}, ${pos.z})) "
         }
         else {
-            value
+            "position"
         }
     }
 
     private fun transformDivisor(value: String, shape: MaterialShape, ti: TransformInfo): String {
-        return if (ti.dynamicScale) {
-            "($value / ${lookup.shapeNames[shape]!!}_divisor)"
-        }
-        else if (shape.transform.scale != vec3(1f, 1f, 1f)) {
-            "($value * ${1/max(max(1/shape.transform.scale.x, 1/shape.transform.scale.y), 1/shape.transform.scale.z)})"
-        }
-        else {
-            value
+        return when {
+            ti.dynamicScale -> "($value / ${lookup.shapeNames[shape]!!}_divisor)"
+            ti.scaled -> "($value * ${1/max(max(1/shape.transform.scale.x, 1/shape.transform.scale.y), 1/shape.transform.scale.z)})"
+            else -> value
         }
     }
 

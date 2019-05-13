@@ -124,19 +124,20 @@ class ShapeRenderer(
 
     private fun setTransformationUniforms(shape: Shape, transform: mat4, ti: TransformInfo) {
         if (shape is MaterialShape && ti.dynamicOrRotated && shape.transform.needsRecompute()) {
-            val this_transform = transform.mul(shape.transform.getTransformationMatrix())
-            shader.setUniform("${lookupUniform.shapeNames[shape]!!}_transform", this_transform.inverse())
+            val thisTransform = transform.mul(shape.transform.getTransformationMatrix())
+            shape.transform.changeHandled()
+            shader.setUniform("${lookupUniform.shapeNames[shape]!!}_transform", thisTransform.inverse())
 
             if (ti.dynamicScale) {
-                val scaled = this_transform.mul(vec3(1f, 1f, 1f).direction()).vec3()
+                val scaled = thisTransform.mul(vec3(1f, 1f, 1f).direction()).vec3()
                 val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
                 shader.setUniform("${lookupUniform.shapeNames[shape]!!}_divisor", divisor)
             }
         }
         else if (shape is ShapeContainer) {
-            val this_transform = transform.mul(shape.transform.getTransformationMatrix())
+            val thisTransform = transform.mul(shape.transform.getTransformationMatrix())
             for (child in shape.getChildren()) {
-                setTransformationUniforms(child, this_transform, TransformInfo(child.transform, ti))
+                setTransformationUniforms(child, thisTransform, TransformInfo(child.transform, ti))
             }
         }
     }

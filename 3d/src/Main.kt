@@ -64,7 +64,7 @@ object Main {
             Sphere(0.4f)
                     .setTranslation(vec3(a.toFloat(), b.toFloat(), 0f))
                     .setColour(vec3(a.toFloat() / 2f, b.toFloat() / 2f, 0f))
-                    .setScale(0.5f + a.toFloat() / 2f)
+                    .setScale(1f)
         })
 
         spheres.map { v -> stuff = arrayOf(*stuff, v) }
@@ -73,6 +73,7 @@ object Main {
                 *stuff
         )
         shape.setScale(5f)
+        shape.dynamicPosition()
 
 //        fun box_outline(size: vec3): Shape {
 //            return ShapeDifference(
