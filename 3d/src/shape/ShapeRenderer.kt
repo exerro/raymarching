@@ -32,9 +32,7 @@ class ShapeRenderer(
         glClearColor(0f, 0f, 0f, 1f)
         glClear(GL_COLOR_BUFFER_BIT)
 
-        val time = System.currentTimeMillis()
         setUniforms()
-        println("${System.currentTimeMillis() - time}ms")
 
         shader.start()
         screen_quad.load()
@@ -121,21 +119,24 @@ class ShapeRenderer(
                 }
             }
         }
-        setTransformationUniforms(shape, mat4_identity)
+        setTransformationUniforms(shape, mat4_identity, TransformInfo(shape.transform))
     }
 
-    private fun setTransformationUniforms(shape: Shape, transform: mat4) {
-        if (shape is MaterialShape && shape.transform.isDynamicOrRotated() && shape.transform.needsRecompute()) {
+    private fun setTransformationUniforms(shape: Shape, transform: mat4, ti: TransformInfo) {
+        if (shape is MaterialShape && ti.dynamicOrRotated && shape.transform.needsRecompute()) {
             val this_transform = transform.mul(shape.transform.getTransformationMatrix())
-            val scaled = this_transform.mul(vec3(1f, 1f, 1f).direction()).vec3()
-            val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
             shader.setUniform("${lookupUniform.shapeNames[shape]!!}_transform", this_transform.inverse())
-            shader.setUniform("${lookupUniform.shapeNames[shape]!!}_divisor", divisor)
+
+            if (ti.dynamicScale) {
+                val scaled = this_transform.mul(vec3(1f, 1f, 1f).direction()).vec3()
+                val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
+                shader.setUniform("${lookupUniform.shapeNames[shape]!!}_divisor", divisor)
+            }
         }
         else if (shape is ShapeContainer) {
             val this_transform = transform.mul(shape.transform.getTransformationMatrix())
             for (child in shape.getChildren()) {
-                setTransformationUniforms(child, this_transform)
+                setTransformationUniforms(child, this_transform, TransformInfo(child.transform, ti))
             }
         }
     }

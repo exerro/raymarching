@@ -60,11 +60,11 @@ object Main {
         )
 
         var stuff = arrayOf<Shape>()
-        val spheres = ((1 .. 15).map { a -> (1 .. 15).map { b -> Pair(a, b) } }.flatten().map { (a, b) ->
+        val spheres = ((1 .. 2).map { a -> (1 .. 2).map { b -> Pair(a, b) } }.flatten().map { (a, b) ->
             Sphere(0.4f)
                     .setTranslation(vec3(a.toFloat(), b.toFloat(), 0f))
-                    .setColour(vec3(a.toFloat() / 15f, b.toFloat() / 15f, 0f))
-                    .setScale(a.toFloat() / 8f)
+                    .setColour(vec3(a.toFloat() / 2f, b.toFloat() / 2f, 0f))
+                    .setScale(0.5f + a.toFloat() / 2f)
         })
 
         spheres.map { v -> stuff = arrayOf(*stuff, v) }
@@ -72,6 +72,7 @@ object Main {
         shape = ShapeUnion(
                 *stuff
         )
+        shape.setScale(5f)
 
 //        fun box_outline(size: vec3): Shape {
 //            return ShapeDifference(

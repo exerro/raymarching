@@ -1,6 +1,5 @@
 package shape
 
-import gl.GLShaderProgram
 import util.*
 
 data class ShapeTransform(
@@ -10,19 +9,7 @@ data class ShapeTransform(
         var dynamicPosition: Boolean = false,
         var dynamicRotation: Boolean = false,
         var dynamicScale: Boolean = false
-): ShaderData() {
-    override fun getGLSLValue(): String {
-        TODO("not implemented")
-    }
-
-    override fun getGLSLType(): String {
-        TODO("not implemented")
-    }
-
-    override fun setUniform(shader: GLShaderProgram, uniformName: String) {
-        TODO("not implemented")
-    }
-
+): ChangingProperty() {
     private lateinit var transformation: mat4
 
     fun needsRecompute(): Boolean {
@@ -39,7 +26,4 @@ data class ShapeTransform(
         changeHandled()
         return transformation
     }
-
-    fun isDynamicOrRotated(): Boolean
-            = dynamicPosition || dynamicRotation || dynamicScale || rotation != vec3(0f, 0f, 0f)
 }
