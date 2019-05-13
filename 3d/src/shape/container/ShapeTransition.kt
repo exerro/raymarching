@@ -3,19 +3,19 @@ package shape.container
 import shape.*
 
 class ShapeTransition(private val a: Shape, private val b: Shape, transition: Float): ShapeContainer() {
-    override fun getDistanceFunction2(): String {
+    override fun getDistanceFunction(): String {
         TODO("not implemented")
     }
 
-    override fun getMaterialFunction2(): String {
+    override fun getMaterialFunction(): String {
         TODO("not implemented")
     }
 
-    override fun compileDistanceFunctionHeader2(builder: ShaderCompiler): ShaderCompiler {
+    override fun compileDistanceFunctionHeader(builder: ShaderCompiler): ShaderCompiler {
         TODO("not implemented")
     }
 
-    override fun compileMaterialFunctionHeader2(builder: ShaderCompiler): ShaderCompiler {
+    override fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler {
         TODO("not implemented")
     }
 
@@ -26,7 +26,7 @@ class ShapeTransition(private val a: Shape, private val b: Shape, transition: Fl
         transitionUniform.data = value
     }
 
-    override fun getUniforms(): Map<String, ShapeUniformValue>
+    override fun getUniforms(): Map<String, ShaderData>
             = mapOf("transition" to transitionUniform)
 
     override fun getChildren(): List<Shape>

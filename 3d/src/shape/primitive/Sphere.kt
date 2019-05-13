@@ -3,11 +3,8 @@ package shape.primitive
 import shape.*
 
 class Sphere(radius: Float, material: Material = default_material()) : MaterialShape(material) {
-    override fun getDistanceFunction2(): String
+    override fun getDistanceFunction(): String
             = "(length(\$position) - \$radius)"
-
-    override fun getMaterialFunction2(): String
-            = "MaterialDistance(\$material, (length(\$position) - \$radius))"
 
     private val radiusUniform = FloatShapeUniformValue(radius)
 
@@ -17,7 +14,7 @@ class Sphere(radius: Float, material: Material = default_material()) : MaterialS
         radiusUniform.data = radius
     }
 
-    override fun getUniforms(): Map<String, ShapeUniformValue> = mapOf(
+    override fun getUniforms(): Map<String, ShaderData> = mapOf(
             "radius" to radiusUniform
     )
 

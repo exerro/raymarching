@@ -2,7 +2,6 @@ package shape.container
 
 import shape.Shape
 import shape.ShapeContainer
-import shape.ShapeUniformValue
 //
 //class ShapeIntersection(private vararg val children: Shape): ShapeContainer() {
 //    override fun getHeader(): String?

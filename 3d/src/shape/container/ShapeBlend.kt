@@ -3,7 +3,6 @@ package shape.container
 import shape.FloatShapeUniformValue
 import shape.Shape
 import shape.ShapeContainer
-import shape.ShapeUniformValue
 //
 //class ShapeBlend(factor: Float, private vararg val children: Shape): ShapeContainer() {
 //    private val factorUniform = FloatShapeUniformValue(factor)

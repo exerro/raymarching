@@ -108,24 +108,32 @@ class ShapeRenderer(
         shader.setUniform("aspectRatio", aspectRatio)
         shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
         lookupUniform.valueNames.map { (value, name) ->
-            value.setUniform(shader, name)
+            if (value.hasChanged()) {
+                value.setUniform(shader, name)
+                value.changeHandled()
+            }
         }
-        lookupUniform.materialNames.map { (value, name) ->
-            value.getMaterial().setUniforms(shader, name)
+        lookupUniform.shapeNames.map { (shape, name) ->
+            if (shape is MaterialShape) {
+                if (shape.getMaterial().hasChanged()) {
+                    shape.getMaterial().setUniform(shader, "${name}_material")
+                    shape.getMaterial().notifyChanged()
+                }
+            }
         }
         setTransformationUniforms(shape, mat4_identity)
     }
 
     private fun setTransformationUniforms(shape: Shape, transform: mat4) {
-        val this_transform = transform.mul(shape.getTransformationMatrix())
-
-        if (shape is MaterialShape) {
+        if (shape is MaterialShape && shape.transform.isDynamicOrRotated() && shape.transform.needsRecompute()) {
+            val this_transform = transform.mul(shape.transform.getTransformationMatrix())
             val scaled = this_transform.mul(vec3(1f, 1f, 1f).direction()).vec3()
             val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
             shader.setUniform("${lookupUniform.shapeNames[shape]!!}_transform", this_transform.inverse())
             shader.setUniform("${lookupUniform.shapeNames[shape]!!}_divisor", divisor)
         }
         else if (shape is ShapeContainer) {
+            val this_transform = transform.mul(shape.transform.getTransformationMatrix())
             for (child in shape.getChildren()) {
                 setTransformationUniforms(child, this_transform)
             }

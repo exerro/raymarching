@@ -2,14 +2,17 @@ package shape
 
 import gl.GLShaderProgram
 import util.vec3
-import util.vec4
 
-data class Material(var colour: vec4) {
-    constructor(colour: vec3): this(colour.vec4(1.0f))
+data class Material(var colour: vec3): ShaderData() {
+    override fun getGLSLType(): String
+            = "Material"
 
-    fun setUniforms(shader: GLShaderProgram, uniformName: String) {
-        shader.setUniform("$uniformName.colour", colour.vec3())
+    override fun getGLSLValue(): String
+            = "Material(vec3(${colour.x}, ${colour.y}, ${colour.z}))"
+
+    override fun setUniform(shader: GLShaderProgram, uniformName: String) {
+        shader.setUniform("$uniformName.colour", colour)
     }
 }
 
-fun default_material() = Material(vec4(1f))
+fun default_material() = Material(vec3(1f))

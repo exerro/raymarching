@@ -1,90 +1,35 @@
 package shape
 
-import gl.GLShaderProgram
-import util.*
+import util.vec3
 
 sealed class Shape {
-    private var translation: vec3 = vec3(0f, 0f, 0f)
-    private var rotation: vec3 = vec3(0f, 0f, 0f)
-    private var scale: vec3 = vec3(1f, 1f, 1f)
+    val transform = ShapeTransform()
+    var compiled = false
 
-    fun setTranslation(translation: vec3): Shape {
-        this.translation = translation
-        return this
-    }
+    fun getPosition(): vec3 = transform.position
+    fun getRotation(): vec3 = transform.rotation
+    fun getScale(): vec3 = transform.scale
 
-    fun translateBy(translation: vec3): Shape {
-        this.translation = this.translation.add(translation)
-        return this
-    }
-
-    fun setRotation(rotation: vec3): Shape {
-        this.rotation = rotation
-        return this
-    }
-
-    fun rotateBy(rotation: vec3): Shape {
-        this.rotation = this.rotation.add(rotation)
-        return this
-    }
-
-    fun setScale(scale: Float): Shape {
-        this.scale = vec3(scale)
-        return this
-    }
-
-    fun scaleBy(scale: Float): Shape {
-        this.scale = this.scale.mul(scale)
-        return this
-    }
-
-    fun setScale(scale: vec3): Shape {
-        this.scale = scale
-        return this
-    }
-
-    fun scaleBy(scale: vec3): Shape {
-        this.scale = this.scale.mul(scale)
-        return this
-    }
-
-    fun getScale(): vec3 = scale
-
-    fun getTransformationMatrix(): mat4 = mat4_translate(translation).mul(rotation.toRotationMatrix()).mul(mat4_scale(scale))
 
     /**
      * Return a list of uniform values
      */
-    abstract fun getUniforms(): Map<String, ShapeUniformValue>
+    abstract fun getUniforms(): Map<String, ShaderData>
 
-    abstract fun getDistanceFunction2(): String
-    abstract fun getMaterialFunction2(): String
-    open fun compileDistanceFunctionHeader2(builder: ShaderCompiler): ShaderCompiler? = null
-    open fun compileMaterialFunctionHeader2(builder: ShaderCompiler): ShaderCompiler? = null
+    abstract fun getDistanceFunction(): String
+    abstract fun getMaterialFunction(): String
+    open fun compileDistanceFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
+    open fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
 }
 
 abstract class MaterialShape(material: Material): Shape() {
-    private var material: Material = material
+    internal val material: Material = material
 
     fun getMaterial(): Material = material
+    fun getColour(): vec3 = material.colour
 
-    fun setMaterial(material: Material): MaterialShape {
-        this.material = material
-        return this
-    }
-
-    fun getColour(): vec4 = material.colour
-
-    fun setColour(colour: vec4): MaterialShape {
-        this.material.colour = colour
-        return this
-    }
-
-    fun setColour(r: Float, g: Float, b: Float): MaterialShape {
-        this.material.colour = vec4(r, g, b, 1f)
-        return this
-    }
-
+    override fun getMaterialFunction(): String
+            = "MaterialDistance(\$material, \$distance)"
 }
 
 abstract class ShapeContainer: Shape() {
@@ -94,39 +39,57 @@ abstract class ShapeContainer: Shape() {
     abstract fun getChildren(): List<Shape>
 }
 
-sealed class ShapeUniformValue {
-    abstract fun setUniform(shader: GLShaderProgram, uniformName: String)
-    abstract fun getGLSLType(): String
+fun <S: Shape> S.setTranslation(translation: vec3): S {
+    transform.position = translation
+    return this
 }
 
-class FloatShapeUniformValue(var data: Float) : ShapeUniformValue() {
-    override fun getGLSLType(): String
-            = "float"
+fun <S: Shape> S.translateBy(translation: vec3): S
+        = setTranslation(this.transform.position.add(translation))
 
-    override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+fun <S: Shape> S.setRotation(rotation: vec3): S {
+    this.transform.rotation = rotation
+    return this
 }
 
-class Vec2ShapeUniformValue(var data: vec2) : ShapeUniformValue() {
-    override fun getGLSLType(): String
-            = "vec2"
+fun <S: Shape> S.rotateBy(rotation: vec3): S
+        = setRotation(transform.rotation.add(rotation))
 
-    override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+fun <S: Shape> S.setScale(scale: vec3): S {
+    transform.scale = scale
+    return this
 }
 
-class Vec3ShapeUniformValue(var data: vec3) : ShapeUniformValue() {
-    override fun getGLSLType(): String
-            = "vec3"
+fun <S: Shape> S.scaleBy(scale: vec3): S
+        = setScale(transform.scale.mul(scale))
 
-    override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+fun <S: Shape> S.setScale(scale: Float): S
+        = setScale(vec3(scale))
+
+fun <S: Shape> S.scaleBy(scale: Float): S
+        = setScale(transform.scale.mul(scale))
+
+fun <S: Shape> S.dynamicPosition(): S {
+    transform.dynamicPosition = true
+    return this
 }
 
-class Vec4ShapeUniformValue(var data: vec4) : ShapeUniformValue() {
-    override fun getGLSLType(): String
-            = "vec4"
-
-    override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+fun <S: Shape> S.dynamicRotation(): S {
+    transform.dynamicRotation = true
+    return this
 }
+
+fun <S: Shape> S.dynamicScale(): S {
+    transform.dynamicScale = true
+    return this
+}
+
+fun <M: MaterialShape> M.setColour(colour: vec3): M {
+    this.material.colour = colour
+    return this
+}
+
+fun <M: MaterialShape> M.setColour(r: Float, g: Float, b: Float): M
+        = setColour(vec3(r, g, b))
+
+data class TransformModificationException(val property: String, val shape: ShapeTransform): Throwable()

@@ -8,6 +8,7 @@ import shape.primitive.Box
 import util.*
 import java.nio.file.Files
 import java.nio.file.Paths
+import javax.lang.model.type.UnionType
 
 object Main {
     var t: Float = 0.0f
@@ -59,7 +60,12 @@ object Main {
         )
 
         var stuff = arrayOf<Shape>()
-        val spheres = ((1 .. 7).map { a -> (1 .. 7).map { b -> Pair(a, b) } }.flatten().map { (a, b) -> Sphere(0.4f).setTranslation(vec3(a.toFloat(), b.toFloat(), 0f)) })
+        val spheres = ((1 .. 15).map { a -> (1 .. 15).map { b -> Pair(a, b) } }.flatten().map { (a, b) ->
+            Sphere(0.4f)
+                    .setTranslation(vec3(a.toFloat(), b.toFloat(), 0f))
+                    .setColour(vec3(a.toFloat() / 15f, b.toFloat() / 15f, 0f))
+                    .setScale(a.toFloat() / 8f)
+        })
 
         spheres.map { v -> stuff = arrayOf(*stuff, v) }
 
@@ -178,6 +184,9 @@ object Main {
 
         display.onDrawCallback = {
             renderer?.renderToFramebuffer()
+            (shape as ShapeUnion).getChildren().map { child ->
+                child.setTranslation(vec3(0f, 0f, 0f))
+            }
              Draw.texture(renderer?.texture!!)
 //            buffer?.debugDraw()
         }

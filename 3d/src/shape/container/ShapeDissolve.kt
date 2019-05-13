@@ -3,7 +3,6 @@ package shape.container
 import shape.FloatShapeUniformValue
 import shape.Shape
 import shape.ShapeContainer
-import shape.ShapeUniformValue
 //
 //class ShapeDissolve(factor: Float, private val a: Shape, private val b: Shape): ShapeContainer() {
 //    private val factorUniform = FloatShapeUniformValue(factor)

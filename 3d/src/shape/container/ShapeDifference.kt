@@ -2,7 +2,6 @@ package shape.container
 
 import shape.Shape
 import shape.ShapeContainer
-import shape.ShapeUniformValue
 //
 //class ShapeDifference(private val a: Shape, private val b: Shape): ShapeContainer() {
 //    override fun getHeader(): String?

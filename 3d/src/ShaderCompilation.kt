@@ -2,8 +2,8 @@ import shape.ShaderCompiler
 import shape.Shape
 import shape.container.ShapeUnion
 import shape.loadUniformNameLookup
-import shape.primitive.Box
 import shape.primitive.Sphere
+import shape.setTranslation
 import util.vec3
 
 object ShaderCompilation {

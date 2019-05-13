@@ -2,6 +2,7 @@ package shape
 
 import util.RootBuilder
 import util.*
+import kotlin.math.max
 
 class ShaderCompiler: RootBuilder() {
     private val MAX_ITERATIONS = 500
@@ -107,7 +108,7 @@ class ShaderCompiler: RootBuilder() {
 
     fun generateFragmentShaderUniforms(shape: Shape): ShaderCompiler
             =appendLine("// uniforms for ${lookup.shapeNames[shape]!!}")
-            .foreach(shape.getUniforms().values) { block, uniform -> block
+            .foreach(shape.getUniforms().values.filter { it.isDynamic() }) { block, uniform -> block
                     .appendUniform(uniform.getGLSLType(), lookup.valueNames[uniform]!!)
             }
             .conditional(shape is ShapeContainer) { block -> block
@@ -116,21 +117,25 @@ class ShaderCompiler: RootBuilder() {
                     }
             }
             .conditional(shape is MaterialShape) { block -> block
-                    .appendUniform("Material", "${lookup.shapeNames[shape]!!}_material")
-                    .appendUniform("mat4", "${lookup.shapeNames[shape]!!}_transform")
-                    .appendUniform("float", "${lookup.shapeNames[shape]!!}_divisor")
+                    .conditional((shape as MaterialShape).getMaterial().isDynamic()) { mblock -> mblock
+                            .appendUniform("Material", "${lookup.shapeNames[shape]!!}_material")
+                    }
+                    .conditional(shape.transform.isDynamicOrRotated()) { tblock -> tblock
+                                .appendUniform("mat4", "${lookup.shapeNames[shape]!!}_transform")
+                                .appendUniform("float", "${lookup.shapeNames[shape]!!}_divisor")
+                    }
             }
 
     fun generateDistanceFunctionHeaders(shape: Shape): ShaderCompiler
-            =(shape.compileDistanceFunctionHeader2(this) ?: this)
+            =(shape.compileDistanceFunctionHeader(this) ?: this)
             .conditional(shape is ShapeContainer) { builder: ShaderCompiler -> builder
-                    .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileDistanceFunctionHeader2(b)?.appendLine() ?: b }
+                    .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileDistanceFunctionHeader(b)?.appendLine() ?: b }
             }
 
     fun generateMaterialFunctionHeaders(shape: Shape): ShaderCompiler
-            =(shape.compileMaterialFunctionHeader2(this) ?: this)
+            =(shape.compileMaterialFunctionHeader(this) ?: this)
             .conditional(shape is ShapeContainer) { builder -> builder
-                    .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileMaterialFunctionHeader2(b)?.appendLine() ?: b }
+                    .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileMaterialFunctionHeader(b)?.appendLine() ?: b }
             }
 
     fun generateFunctionDefinitions(shape: Shape): ShaderCompiler
@@ -139,18 +144,21 @@ class ShaderCompiler: RootBuilder() {
             .appendFunction("MaterialDistance", "materialFunction", Pair("vec3", "position")) { block -> block.appendReturn(generateMaterialFunction(shape)) }
 
     private fun generateDistanceFunction(shape: Shape): String
-            = if (shape is MaterialShape) "(${replaceUniforms(shape, shape.getDistanceFunction2(), ::generateDistanceFunction)} / ${lookup.shapeNames[shape]!!}_divisor)" else replaceUniforms(shape, shape.getDistanceFunction2(), ::generateDistanceFunction)
+            = if (shape is MaterialShape) {
+                transformDivisor(replaceUniforms(shape, shape.getDistanceFunction(), ::generateDistanceFunction), shape)
+            } else {
+                replaceUniforms(shape, shape.getDistanceFunction(), ::generateDistanceFunction)
+            }
 
     private fun generateMaterialFunction(shape: Shape): String
-            =replaceUniforms(shape, shape.getMaterialFunction2(), ::generateMaterialFunction)
+            =replaceUniforms(shape, shape.getMaterialFunction(), ::generateMaterialFunction)
 
     private fun replaceUniforms(shape: Shape, text: String, buildChild: (Shape) -> String): String {
-        val nameLookup = shape.getUniforms().map { (name, uniform) -> name to lookup.valueNames[uniform] } .toMap()
-        val uniformsRemapped = nameLookup.keys.toList().fold(text) { acc, it ->
-            acc.replace("\$$it", nameLookup[it]!!)
+        val uniformsRemapped = shape.getUniforms().toList().fold(text) { acc, (name, value) ->
+            acc.replace("\$$name", if (value.isDynamic()) lookup.valueNames[value]!! else value.getGLSLValue())
         }
         val propertiesRemapped = uniformsRemapped
-                .replace("\$position", "(${lookup.shapeNames[shape]!!}_transform * vec4(position, 1)).xyz")
+                .replace("\$position", transformUsing("position", shape))
 
         return if (shape is ShapeContainer) {
             val children = shape.getChildren().map(buildChild)
@@ -159,9 +167,54 @@ class ShaderCompiler: RootBuilder() {
                 acc.replace("\$$it", children[it - 1])
             }
         }
+        else if (shape is MaterialShape) {
+            val materialRemapped = propertiesRemapped
+                    .replace("\$material", if (shape.getMaterial().isDynamic()) "${lookup.shapeNames[shape]!!}_material" else shape.getMaterial().getGLSLValue())
+
+            if (materialRemapped.contains("\$distance")) {
+                materialRemapped.replace("\$distance", generateDistanceFunction(shape))
+            }
+            else {
+                materialRemapped
+            }
+        }
         else {
-            propertiesRemapped
-                    .replace("\$material", "${lookup.shapeNames[shape]!!}_material")
+            "wtff"
+        }
+    }
+
+    private fun transformUsing(value: String, shape: Shape): String {
+        return if (!shape.transform.isDynamicOrRotated()) {
+            val noScale = shape.transform.scale == vec3(1f, 1f, 1f)
+            val noTranslate = shape.transform.position == vec3(0f, 0f, 0f)
+
+            if (noScale && noTranslate) {
+                value
+            }
+            else if (noScale) {
+                "($value - vec3(${shape.transform.position.x}, ${shape.transform.position.y}, ${shape.transform.position.z}))"
+            }
+            else if (noTranslate) {
+                "($value / vec3(${shape.transform.scale.x}, ${shape.transform.scale.y}, ${shape.transform.scale.z}))"
+            }
+            else {
+                "(($value - vec3(${shape.transform.position.x}, ${shape.transform.position.y}, ${shape.transform.position.z})) / vec3(${shape.transform.scale.x}, ${shape.transform.scale.y}, ${shape.transform.scale.z}))"
+            }
+        }
+        else {
+            "(${lookup.shapeNames[shape]!!}_transform * vec4(position, 1)).xyz"
+        }
+    }
+
+    private fun transformDivisor(value: String, shape: MaterialShape): String {
+        return if (shape.transform.isDynamicOrRotated()) {
+            "\"($value / ${lookup.shapeNames[shape]!!}_divisor)\""
+        }
+        else if (shape.transform.scale != vec3(1f, 1f, 1f)) {
+            "($value / ${max(max(1/shape.transform.scale.x, 1/shape.transform.scale.y), 1/shape.transform.scale.z)})"
+        }
+        else {
+            value
         }
     }
 
