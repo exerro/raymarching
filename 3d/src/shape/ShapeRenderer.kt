@@ -105,17 +105,19 @@ class ShapeRenderer(
         shader.setUniform("transform", camera.rotation.toRotationMatrix().mat3())
         shader.setUniform("aspectRatio", aspectRatio)
         shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
+
         lookupUniform.valueNames.map { (value, name) ->
             if (value.hasChanged()) {
                 value.setUniform(shader, name)
                 value.changeHandled()
             }
         }
+
         lookupUniform.shapeNames.map { (shape, name) ->
             if (shape is MaterialShape) {
-                if (shape.getMaterial().hasChanged()) {
-                    shape.getMaterial().setUniform(shader, "${name}_material")
-                    shape.getMaterial().notifyChanged()
+                if (shape.getMaterial().colour.hasChanged()) {
+                    shape.getMaterial().colour.setUniform(shader, "${name}_material.colour")
+                    shape.getMaterial().colour.changeHandled()
                 }
             }
         }

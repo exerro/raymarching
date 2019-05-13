@@ -14,7 +14,7 @@ sealed class Shape {
     /**
      * Return a list of uniform values
      */
-    abstract fun getUniforms(): Map<String, ShaderData>
+    abstract fun getUniforms(): Map<String, ShaderData<*>>
 
     abstract fun getDistanceFunction(): String
     abstract fun getMaterialFunction(): String
@@ -22,11 +22,9 @@ sealed class Shape {
     open fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
 }
 
-abstract class MaterialShape(material: Material): Shape() {
-    internal val material: Material = material
-
+abstract class MaterialShape(internal val material: Material): Shape() {
     fun getMaterial(): Material = material
-    fun getColour(): vec3 = material.colour
+    fun getColour(): vec3 = material.colour.getValue()
 
     override fun getMaterialFunction(): String
             = "MaterialDistance(\$material, \$distance)"
@@ -88,7 +86,7 @@ fun <S: Shape> S.dynamicScale(): S {
 }
 
 fun <M: MaterialShape> M.setColour(colour: vec3): M {
-    this.material.colour = colour
+    this.material.colour.setValue(colour)
     return this
 }
 

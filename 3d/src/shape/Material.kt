@@ -3,15 +3,19 @@ package shape
 import gl.GLShaderProgram
 import util.vec3
 
-data class Material(var colour: vec3): ShaderData() {
-    override fun getGLSLType(): String
-            = "Material"
+class Material(colour: vec3) {
+    val colour = MaterialColour(colour)
+}
 
+class MaterialColour(colour: vec3): ShaderData<vec3>(colour) {
     override fun getGLSLValue(): String
-            = "Material(vec3(${colour.x}, ${colour.y}, ${colour.z}))"
+            = "Material(vec3(${getValue().x}, ${getValue().y}, ${getValue().z}))"
+
+    override fun getGLSLType(): String
+            = "vec3"
 
     override fun setUniform(shader: GLShaderProgram, uniformName: String) {
-        shader.setUniform("$uniformName.colour", colour)
+        shader.setUniform(uniformName, getValue())
     }
 }
 

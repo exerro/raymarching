@@ -1,7 +1,7 @@
 package shape
 
 class UniformNameLookup {
-    val valueNames = HashMap<ShaderData, String>()
+    val valueNames = HashMap<ShaderData<*>, String>()
     val shapeNames = HashMap<Shape, String>()
 
     fun generateShapeName(shape: Shape): String {
@@ -12,7 +12,7 @@ class UniformNameLookup {
         return "${name}_$i"
     }
 
-    fun generateValueUniformName(name: String, uniform: ShaderData): String {
+    fun generateValueUniformName(name: String, uniform: ShaderData<*>): String {
         var i = 1
         while (valueNames.values.contains("${name}_$i")) ++i
         valueNames[uniform] = "${name}_$i"

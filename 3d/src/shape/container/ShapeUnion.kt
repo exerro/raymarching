@@ -16,7 +16,7 @@ class ShapeUnion(private vararg val children: Shape): ShapeContainer() {
                     .appendReturn("a.dist < b.dist ? a : b")
             }
 
-    override fun getUniforms(): Map<String, ShaderData>
+    override fun getUniforms(): Map<String, ShaderData<*>>
             = mapOf()
 
     override fun getChildren(): List<Shape>

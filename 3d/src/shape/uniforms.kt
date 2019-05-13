@@ -5,46 +5,46 @@ import util.vec2
 import util.vec3
 import util.vec4
 
-class FloatShapeUniformValue(var data: Float) : ShaderData() {
+class FloatShapeUniformValue(value: Float) : ShaderData<Float>(value) {
     override fun getGLSLValue(): String
-            = data.toString()
+            = getValue().toString()
 
     override fun getGLSLType(): String
             = "float"
 
     override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+            = shader.setUniform(uniformName, getValue())
 }
 
-class Vec2ShapeUniformValue(var data: vec2) : ShaderData() {
+class Vec2ShapeUniformValue(data: vec2) : ShaderData<vec2>(data) {
     override fun getGLSLValue(): String
-            = "vec2(${data.x}, ${data.y})"
+            = "vec2(${getValue().x}, ${getValue().y})"
 
     override fun getGLSLType(): String
             = "vec2"
 
     override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+            = shader.setUniform(uniformName, getValue())
 }
 
-class Vec3ShapeUniformValue(var data: vec3) : ShaderData() {
+class Vec3ShapeUniformValue(data: vec3) : ShaderData<vec3>(data) {
     override fun getGLSLValue(): String
-            = "vec3(${data.x}, ${data.y}, ${data.z})"
+            = "vec3(${getValue().x}, ${getValue().y}, ${getValue().z})"
 
     override fun getGLSLType(): String
             = "vec3"
 
     override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+            = shader.setUniform(uniformName, getValue())
 }
 
-class Vec4ShapeUniformValue(var data: vec4) : ShaderData() {
+class Vec4ShapeUniformValue(data: vec4) : ShaderData<vec4>(data) {
     override fun getGLSLValue(): String
-            = "vec4(${data.x}, ${data.y}, ${data.z}, ${data.w})"
+            = "vec4(${getValue().x}, ${getValue().y}, ${getValue().z}, ${getValue().w})"
 
     override fun getGLSLType(): String
             = "vec4"
 
     override fun setUniform(shader: GLShaderProgram, uniformName: String)
-            = shader.setUniform(uniformName, data)
+            = shader.setUniform(uniformName, getValue())
 }

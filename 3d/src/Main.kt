@@ -1,14 +1,18 @@
-import gl.*
+//import shape.primitive.Line
+import gl.Display
+import gl.Draw
+import gl.GBuffer
+import gl.loadShaderProgram
 import org.lwjgl.glfw.GLFW.*
 import shape.*
-import shape.container.*
-//import shape.primitive.Line
+import shape.container.ShapeUnion
 import shape.primitive.Sphere
-import shape.primitive.Box
-import util.*
+import util.LogType
+import util.Logging
+import util.enable
+import util.vec3
 import java.nio.file.Files
 import java.nio.file.Paths
-import javax.lang.model.type.UnionType
 
 object Main {
     var t: Float = 0.0f
@@ -17,6 +21,10 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
+        Logging.enable(LogType.INFO)
+        Logging.enable(LogType.WARNING)
+        Logging.enable(LogType.ERROR)
+
         val display = Display(WIDTH, HEIGHT)
 //        val compiler = ShaderCompiler()
         val compiler = ShaderCompiler()
@@ -73,7 +81,7 @@ object Main {
                 *stuff
         )
         shape.setScale(5f)
-        shape.dynamicPosition()
+//        shape.dynamicPosition()
 
 //        fun box_outline(size: vec3): Shape {
 //            return ShapeDifference(
@@ -100,6 +108,8 @@ object Main {
         compiler.generateDistanceFunctionHeaders(shape)
         compiler.generateMaterialFunctionHeaders(shape)
         compiler.generateFunctionDefinitions(shape)
+        (shape.getChildren()[0] as Sphere).setRadius(5f)
+        shape.getChildren()[0].getUniforms().values.map { it.lock() }
 
         val vertexShader = String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
         val fragmentShader = compiler.getText()
@@ -186,9 +196,9 @@ object Main {
 
         display.onDrawCallback = {
             renderer?.renderToFramebuffer()
-            (shape as ShapeUnion).getChildren().map { child ->
-                child.setTranslation(vec3(0f, 0f, 0f))
-            }
+//            (shape as ShapeUnion).getChildren().map { child ->
+//                child.setTranslation(vec3(0f, 0f, 0f))
+//            }
              Draw.texture(renderer?.texture!!)
 //            buffer?.debugDraw()
         }

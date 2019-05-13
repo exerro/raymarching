@@ -21,12 +21,12 @@ class ShapeTransition(private val a: Shape, private val b: Shape, transition: Fl
 
     private val transitionUniform = FloatShapeUniformValue(transition)
 
-    fun getTransition(): Float = transitionUniform.data
+    fun getTransition(): Float = transitionUniform.getValue()
     fun setTransition(value: Float) {
-        transitionUniform.data = value
+        transitionUniform.setValue(value)
     }
 
-    override fun getUniforms(): Map<String, ShaderData>
+    override fun getUniforms(): Map<String, ShaderData<*>>
             = mapOf("transition" to transitionUniform)
 
     override fun getChildren(): List<Shape>

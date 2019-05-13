@@ -8,13 +8,12 @@ class Sphere(radius: Float, material: Material = default_material()) : MaterialS
 
     private val radiusUniform = FloatShapeUniformValue(radius)
 
-    fun getRadius(): Float = radiusUniform.data
-
+    fun getRadius(): Float = radiusUniform.getValue()
     fun setRadius(radius: Float) {
-        radiusUniform.data = radius
+        radiusUniform.setValue(radius)
     }
 
-    override fun getUniforms(): Map<String, ShaderData> = mapOf(
+    override fun getUniforms(): Map<String, ShaderData<*>> = mapOf(
             "radius" to radiusUniform
     )
 

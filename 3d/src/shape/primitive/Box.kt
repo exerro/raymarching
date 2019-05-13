@@ -18,13 +18,12 @@ class Box(size: vec3, material: Material = default_material()) : MaterialShape(m
 
     private val sizeUniform = Vec3ShapeUniformValue(size)
 
-    fun getSize(size: vec3) = sizeUniform.data
-
+    fun getSize(size: vec3) = sizeUniform.getValue()
     fun setSize(size: vec3) {
-        sizeUniform.data = size
+        sizeUniform.setValue(size)
     }
 
-    override fun getUniforms(): Map<String, ShaderData> = mapOf(
+    override fun getUniforms(): Map<String, ShaderData<*>> = mapOf(
             "size" to sizeUniform
     )
 

@@ -120,7 +120,7 @@ class ShaderCompiler: RootBuilder() {
                     }
             }
             .conditional(shape is MaterialShape) { block -> block
-                    .conditional((shape as MaterialShape).getMaterial().isDynamic()) { mblock -> mblock
+                    .conditional((shape as MaterialShape).getMaterial().colour.isDynamic()) { mblock -> mblock
                             .appendUniform("Material", "${lookup.shapeNames[shape]!!}_material")
                     }
                     .conditional(ti.dynamicOrRotated) { tblock -> tblock
@@ -174,7 +174,7 @@ class ShaderCompiler: RootBuilder() {
         }
         else if (shape is MaterialShape) {
             val materialRemapped = propertiesRemapped
-                    .replace("\$material", if (shape.getMaterial().isDynamic()) "${lookup.shapeNames[shape]!!}_material" else shape.getMaterial().getGLSLValue())
+                    .replace("\$material", if (shape.getMaterial().colour.isDynamic()) { shape.getMaterial().colour.changeHandled(); "${lookup.shapeNames[shape]!!}_material" } else shape.getMaterial().colour.getGLSLValue())
 
             if (materialRemapped.contains("\$distance")) {
                 materialRemapped.replace("\$distance", generateDistanceFunction(shape, ti))

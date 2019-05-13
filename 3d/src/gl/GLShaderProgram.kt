@@ -9,42 +9,49 @@ class GLShaderProgram(private val programID: Int, private val fragmentID: Int, p
     private var active: Boolean = false
 
     fun setUniform(name: String, value: Boolean) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniform1i(GL20.glGetUniformLocation(programID, name), if (value) 1 else 0)
         if (!active) GL20.glUseProgram(0)
     }
 
     fun setUniform(name: String, value: Float) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniform1f(GL20.glGetUniformLocation(programID, name), value)
         if (!active) GL20.glUseProgram(0)
     }
 
     fun setUniform(name: String, value: vec2) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniform2f(GL20.glGetUniformLocation(programID, name), value.x, value.y)
         if (!active) GL20.glUseProgram(0)
     }
 
     fun setUniform(name: String, value: vec3) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniform3f(GL20.glGetUniformLocation(programID, name), value.x, value.y, value.z)
         if (!active) GL20.glUseProgram(0)
     }
 
     fun setUniform(name: String, value: vec4) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniform4f(GL20.glGetUniformLocation(programID, name), value.x, value.y, value.z, value.w)
         if (!active) GL20.glUseProgram(0)
     }
 
     fun setUniform(name: String, value: mat4) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(programID, name), true, value.elements)
         if (!active) GL20.glUseProgram(0)
     }
 
     fun setUniform(name: String, value: mat3) {
+        Logging.log(LogType.SHADER_UNIFORM) { "Setting shader uniform $name to $value" }
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniformMatrix3fv(GL20.glGetUniformLocation(programID, name), true, value.elements)
         if (!active) GL20.glUseProgram(0)
