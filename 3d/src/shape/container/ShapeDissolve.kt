@@ -16,10 +16,11 @@ class ShapeDissolve(factor: Float, private val a: Shape, private val b: Shape): 
 
     override fun getHeader(): String?
             = "DistanceData opDissolveData(DistanceData a, DistanceData b, float k) {\n" +
-                "\tfloat h = max(k - abs(a.distance + b.distance), 0) / k;\n" +
-                "\treturn a.distance > -b.distance ?\n" +
-                "\t    DistanceData(a.material, a.distance + h*h*h*k/6.0) :\n" +
-                "\t    DistanceData(b.material, -b.distance + h*h*h*k/6.0);\n" +
+                "\tfloat h = clamp( 0.5 - 0.5*(a.distance+b.distance)/k, 0, 1 );\n" +
+                "\tvec3 c1 = a.material.colour.xyz;\n" +
+                "\tvec3 c2 = b.material.colour.xyz;\n" +
+                "\tvec3 col = c1 * (1 - h) + c2 * h;\n" +
+                "\treturn DistanceData(Material(vec4(col, 1)), a.distance * (1 - h) - b.distance * h + h*(1-h)*k);\n" +
             "}\n\n" +
             "float opDissolve(float a, float b, float k) {\n" +
             "\tfloat h = max(k - abs(a - b), 0) / k;\n" +

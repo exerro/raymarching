@@ -16,14 +16,14 @@ object Main {
     fun main(args: Array<String>) {
         val display = Display(WIDTH, HEIGHT)
         val compiler = ShaderCompiler()
-        val sphere = Sphere(8f).setColour(0.3f, 0.9f, 0.6f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f))
-        val sphere2 = Sphere(6f).setColour(1.0f, 0.0f, 0.0f).setTranslation(vec3(-4f, 2f, 0f))
+        val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f))
+        val sphere2 = Sphere(6f).setColour(1.0f, 0.5f, 0.5f).setTranslation(vec3(-4f, 2f, 0f))
         val line = Line(vec3(-7.5f, -7.5f, 7.5f), vec3(7.5f, 7.5f, -7.5f), 2.0f).setTranslation(vec3(7.5f, 7.5f, 7.5f))
         val cube = Box(vec3(5.0f, 5.0f, 5.0f)).setTranslation(vec3(-10.0f, -10.0f, 5.0f))
         val blend = ShapeBlend(
                 2f,
                 Sphere(6f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(4f, -3f, 0f)),
-                Sphere(8f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(0f, 5f, -3f)),
+                Sphere(8f).setColour(0.3f, 0.9f, 0.6f).setTranslation(vec3(0f, 5f, -3f)),
                 Sphere(10f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-10f, 2f, -2f)),
                 line,
                 cube,
@@ -129,6 +129,7 @@ object Main {
             cube.setTranslation(vec3(-10.0f, Math.sin(t.toDouble() * 2).toFloat() * 8 - 2, 5.0f))
 //            shape.rotateBy(vec3(0f, -dt/3, 0f))
             line.rotateBy(vec3(0f, -dt, 0f))
+            blend.setFactor(4.5f + Math.sin(t.toDouble() * 10).toFloat() * 4f)
 //            shape.setScale(1.4f + 0.5f * Math.sin(3 * t.toDouble()).toFloat())
 //            blend.setFactor(1 + Math.sin(t.toDouble() * 10).toFloat() * 3)
 

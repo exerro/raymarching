@@ -27,7 +27,7 @@ float lighting(vec4 position, vec3 normal) {
 	vec4 reflection = normalize(reflect(position - ray_position, vec4(normal, 0.0)));
 	float ambient = 0.3;
 	float diffuse = max(0, dot(vec4(normal, 0.0), LIGHT_POSITION) * 0.7);
-	float specular = pow(max(0, dot(reflection, LIGHT_POSITION)), 30) * 0.1;
+	float specular = pow(max(0, dot(reflection, LIGHT_POSITION)), 30) * 0.5;
 
 	return ambient + diffuse + specular;
 }
