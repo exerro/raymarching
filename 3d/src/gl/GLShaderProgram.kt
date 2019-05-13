@@ -114,6 +114,8 @@ fun loadShaderProgram(vertexShader: String, geometryShader: String?, fragmentSha
 private fun loadShader(shaderContent: String, shaderType: Int): Int {
     val shaderID = GL20.glCreateShader(shaderType)
 
+    Logging.log(LogType.SHADER_COMPILE) { shaderContent }
+
     GL20.glShaderSource(shaderID, shaderContent)
     GL20.glCompileShader(shaderID)
 

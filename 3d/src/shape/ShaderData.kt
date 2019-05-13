@@ -11,7 +11,10 @@ abstract class ShaderData<T>(private var value: T): ChangingProperty() {
     abstract fun getGLSLType(): String
     abstract fun setUniform(shader: GLShaderProgram, uniformName: String)
 
-    fun setDynamic(dynamic: Boolean = true) { this.dynamic = dynamic }
+    fun setDynamic(dynamic: Boolean = true) {
+        if (locked && dynamic) throw StaticValueChangeException(this, "dynamic status of property changed")
+        this.dynamic = dynamic
+    }
     fun isDynamic(): Boolean = dynamic
 
     fun lock() { locked = true }
@@ -19,9 +22,9 @@ abstract class ShaderData<T>(private var value: T): ChangingProperty() {
 
     fun getValue(): T = value
     fun setValue(value: T) {
-        if (!dynamic && locked) throw StaticValueChangeException(this)
+        if (!dynamic && locked) throw StaticValueChangeException(this, "non-dynamic property changed")
         this.value = value
     }
 }
 
-class StaticValueChangeException(val property: ShaderData<*>): Throwable("non-dynamic property changed")
+class StaticValueChangeException(val property: ShaderData<*>, error: String): Throwable(error)

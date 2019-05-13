@@ -1,119 +1,114 @@
 package shape
 
 import gl.*
-import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL14.GL_FUNC_ADD
-import org.lwjgl.opengl.GL14.glBlendEquation
-import org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
 import util.*
+import java.lang.IllegalStateException
+import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.math.max
 
 class ShapeRenderer(
-        private val shader: GLShaderProgram,
-        val shape: Shape,
-        private val lookupUniform: UniformNameLookup,
-        private val width: Int,
-        private val height: Int,
         val camera: Camera = Camera()
 ): GLResource {
-    var aspectRatio = width.toFloat() / height
-    var framebuffer = FBO(width, height)
-    var texture = createEmptyTexture(width, height)
-    var sent = false
+    private lateinit var shape: Shape
+    private lateinit var shader: GLShaderProgram
+    private lateinit var lookup: UniformNameLookup
+    private lateinit var dimensions: vec2
+    private lateinit var framebuffer: FBO
+    private lateinit var texture: Texture
+    private var shapeLoaded: Boolean = false
+    private var bufferLoaded: Boolean = false
 
-    init {
-        framebuffer.attachTexture(texture, GL_COLOR_ATTACHMENT0)
-        framebuffer.setDrawBuffers(GL_COLOR_ATTACHMENT0)
-        println("width: $width, height: $height")
+    fun loadShape(shape: Shape = this.shape) {
+        if (shapeLoaded) { unloadShape() }
+        this.shape = shape
+        val compiler = ShaderCompiler()
+
+        loadUniformNameLookup(shape, compiler.lookup)
+
+        compiler.generateFragmentShaderStart()
+        compiler.generateFragmentShaderMain()
+        compiler.generateFragmentShaderUniforms(shape)
+        compiler.generateDistanceFunctionHeaders(shape)
+        compiler.generateMaterialFunctionHeaders(shape)
+        compiler.generateFunctionDefinitions(shape)
+
+        val vertexShaderText = String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
+        val fragmentShaderText = compiler.getText()
+
+        shader = loadShaderProgram(vertexShaderText, fragmentShaderText)
+        lookup = compiler.lookup
+        shapeLoaded = true
+
+        shape.lock()
     }
+
+    fun getTexture(): Texture {
+        if (!bufferLoaded) throw IllegalStateException("cannot get texture of renderer without a loaded buffer")
+        return texture
+    }
+
+    fun unloadShape() {
+        if (!shapeLoaded) throw IllegalStateException("cannot unload shape from renderer without a loaded shape")
+        shapeLoaded = false
+        this.shape.unlock()
+    }
+
+    fun loadBuffer(width: Int, height: Int) {
+        if (bufferLoaded) unloadBuffer()
+
+        dimensions = vec2(width.toFloat(), height.toFloat())
+        framebuffer = FBO(width, height)
+        texture = createEmptyTexture(width, height)
+
+        framebuffer.attachTexture(texture, GL30.GL_COLOR_ATTACHMENT0)
+        framebuffer.setDrawBuffers(GL30.GL_COLOR_ATTACHMENT0)
+
+        bufferLoaded = true
+    }
+
+    fun unloadBuffer() {
+        if (!bufferLoaded) throw IllegalStateException("cannot unload buffer from renderer without a loaded buffer")
+        bufferLoaded = false
+        texture.destroy()
+        framebuffer.destroy()
+    }
+
 
     fun renderToFramebuffer() {
+        if (!bufferLoaded) throw IllegalStateException("cannot draw renderer without a loaded buffer")
+        if (!shapeLoaded) throw IllegalStateException("cannot draw renderer without a loaded shape")
+
         framebuffer.bind()
-        glClearColor(0f, 0f, 0f, 1f)
-        glClear(GL_COLOR_BUFFER_BIT)
+        GL11.glClearColor(0f, 0f, 0f, 1f)
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
 
         setUniforms()
 
         shader.start()
         screen_quad.load()
-        glDrawElements(GL_TRIANGLES, screen_quad.vertexCount, GL_UNSIGNED_INT, 0)
+        GL11.glDrawElements(GL11.GL_TRIANGLES, screen_quad.vertexCount, GL11.GL_UNSIGNED_INT, 0)
         screen_quad.unload()
         shader.stop()
         framebuffer.unbind()
-    }
-
-    fun renderToBuffer(buffer: GBuffer) {
-        // TODO
-        buffer.bind()
-
-        Draw.pushViewport(vec2(width.toFloat(), height.toFloat()))
-
-        glDisable(GL_CULL_FACE)
-        glDisable(GL_DEPTH_TEST)
-        glDisable(GL_BLEND)
-        glDepthMask(false)
-        glClearColor(0f, 0f, 0f, 0.0f)
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        setUniforms()
-        buffer.bind()
-        shader.start()
-        screen_quad.load()
-        glDrawElements(GL_TRIANGLES, screen_quad.vertexCount, GL_UNSIGNED_INT, 0)
-        screen_quad.unload()
-        shader.stop()
-        buffer.unbind()
-
-        // glDepthMask(false)
-        // glDisable(GL_CULL_FACE);
-        // glDisable(GL_DEPTH_TEST);
-
-        buffer.unbind()
-        framebuffer.bind()
-
-        glClearColor(0f, 0f, 0f, 1f)
-        glClear(GL_COLOR_BUFFER_BIT)
-        glEnable(GL_BLEND)
-        glBlendEquation(GL_FUNC_ADD)
-        glBlendFunc(GL_ONE, GL_ONE)
-
-        buffer.bindReading()
-
-//        for (lightType in scene.getLightTypes()) {
-//            var shader = Light.getShader(lightType)
-//
-//            shader.start();
-//            shader.setUniform("screenSize", new vec2f(getWidth(), getHeight()));
-//            shader.setUniform("viewTransform", viewMatrix);
-//            shader.setUniform("projectionTransform", projectionMatrix);
-//
-//            for (light in scene.getLightsOfType(lightType)) {
-//                light.setUniforms(viewMatrix, projectionMatrix);
-//                light.render(buffer);
-//            }
-//        }
-
-        Draw.popViewport()
-
-        framebuffer.unbind()
-        buffer.unbindReading()
     }
 
     private fun setUniforms() {
-//        if (sent) return
-        sent = true
         shader.setUniform("cameraPosition", camera.position)
         shader.setUniform("transform", camera.rotation.toRotationMatrix().mat3())
-        shader.setUniform("aspectRatio", aspectRatio)
+        shader.setUniform("aspectRatio", dimensions.x / dimensions.y)
         shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
 
-        lookupUniform.valueNames.map { (value, name) ->
+        lookup.valueNames.map { (value, name) ->
             if (value.hasChanged()) {
                 value.setUniform(shader, name)
                 value.changeHandled()
             }
         }
 
-        lookupUniform.shapeNames.map { (shape, name) ->
+        lookup.shapeNames.map { (shape, name) ->
             if (shape is MaterialShape) {
                 if (shape.getMaterial().colour.hasChanged()) {
                     shape.getMaterial().colour.setUniform(shader, "${name}_material.colour")
@@ -121,6 +116,7 @@ class ShapeRenderer(
                 }
             }
         }
+
         setTransformationUniforms(shape, mat4_identity, TransformInfo(shape.transform))
     }
 
@@ -128,12 +124,12 @@ class ShapeRenderer(
         if (shape is MaterialShape && ti.dynamicOrRotated && shape.transform.needsRecompute()) {
             val thisTransform = transform.mul(shape.transform.getTransformationMatrix())
             shape.transform.changeHandled()
-            shader.setUniform("${lookupUniform.shapeNames[shape]!!}_transform", thisTransform.inverse())
+            shader.setUniform("${lookup.shapeNames[shape]!!}_transform", thisTransform.inverse())
 
             if (ti.dynamicScale) {
                 val scaled = thisTransform.mul(vec3(1f, 1f, 1f).direction()).vec3()
                 val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
-                shader.setUniform("${lookupUniform.shapeNames[shape]!!}_divisor", divisor)
+                shader.setUniform("${lookup.shapeNames[shape]!!}_divisor", divisor)
             }
         }
         else if (shape is ShapeContainer) {
@@ -145,8 +141,7 @@ class ShapeRenderer(
     }
 
     override fun destroy() {
-        framebuffer.destroy()
-        texture.destroy()
-        shader.destroy()
+        if (bufferLoaded) unloadBuffer()
+        if (shapeLoaded) unloadShape()
     }
 }

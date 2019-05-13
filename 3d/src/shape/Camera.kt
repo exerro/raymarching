@@ -6,7 +6,7 @@ import util.vec3
 
 class Camera {
     var FOV: Float = 70.0f
-    var position = vec3(0.0f, 0.0f, 30.0f)
+    var position = vec3(0.0f, 0.0f, 0.0f)
     var rotation = vec3(0f, 0f, 0f)
 
     fun forward(distance: Float) {

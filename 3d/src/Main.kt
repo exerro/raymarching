@@ -1,8 +1,6 @@
 //import shape.primitive.Line
 import gl.Display
 import gl.Draw
-import gl.GBuffer
-import gl.loadShaderProgram
 import org.lwjgl.glfw.GLFW.*
 import shape.*
 import shape.container.ShapeUnion
@@ -11,8 +9,6 @@ import util.LogType
 import util.Logging
 import util.enable
 import util.vec3
-import java.nio.file.Files
-import java.nio.file.Paths
 
 object Main {
     var t: Float = 0.0f
@@ -24,10 +20,9 @@ object Main {
         Logging.enable(LogType.INFO)
         Logging.enable(LogType.WARNING)
         Logging.enable(LogType.ERROR)
+        Logging.enable(LogType.SHADER_COMPILE)
 
         val display = Display(WIDTH, HEIGHT)
-//        val compiler = ShaderCompiler()
-        val compiler = ShaderCompiler()
         val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f))
         val sphere2 = Sphere(6f).setColour(1.0f, 0.5f, 0.5f).setTranslation(vec3(-4f, 2f, 0f))
 //        val line = Line(vec3(-7.5f, -7.5f, 7.5f), vec3(7.5f, 7.5f, -7.5f), 2.0f).setTranslation(vec3(7.5f, 7.5f, 7.5f))
@@ -100,23 +95,7 @@ object Main {
 //                box_outline(vec3(4f))
 //        )
 
-        loadUniformNameLookup(shape, compiler.lookup)
-
-        compiler.generateFragmentShaderStart()
-        compiler.generateFragmentShaderMain()
-        compiler.generateFragmentShaderUniforms(shape)
-        compiler.generateDistanceFunctionHeaders(shape)
-        compiler.generateMaterialFunctionHeaders(shape)
-        compiler.generateFunctionDefinitions(shape)
-        (shape.getChildren()[0] as Sphere).setRadius(5f)
-        shape.getChildren()[0].getUniforms().values.map { it.lock() }
-
-        val vertexShader = String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
-        val fragmentShader = compiler.getText()
-        var renderer: ShapeRenderer? = null
-        var buffer: GBuffer? = null
-
-        println(fragmentShader)
+        lateinit var renderer: ShapeRenderer
 
         val speed = 50f
         var lastFPS = 0
@@ -132,47 +111,33 @@ object Main {
         display.onMouseDragCallback = { pos, last, _, _ ->
             val dx = pos.x - last.x
             val dy = pos.y - last.y
-            renderer?.camera?.rotateY(-dx / display.width * 0.5f)
-            renderer?.camera?.rotateX(-dy / display.height * 0.5f)
+            renderer.camera.rotateY(-dx / display.width * 0.5f)
+            renderer.camera.rotateX(-dy / display.height * 0.5f)
         }
 
         display.onLoadCallback = {
             Draw.init()
-
-            renderer = ShapeRenderer(
-                    loadShaderProgram(vertexShader, fragmentShader),
-                    shape,
-                    compiler.lookup,
-                    WIDTH,
-                    HEIGHT
-            )
-
-            buffer = GBuffer(WIDTH, HEIGHT)
+            renderer = ShapeRenderer()
+            renderer.loadShape(shape)
+            renderer.loadBuffer(WIDTH, HEIGHT)
+            renderer.camera.forward(-30f)
         }
 
         display.onUnloadCallback = {
-            renderer?.destroy()
-            buffer?.destroy()
+            renderer.destroy()
         }
 
         display.onResizedCallback = { width, height ->
-            renderer = ShapeRenderer(
-                    loadShaderProgram(vertexShader, fragmentShader),
-                    shape,
-                    compiler.lookup,
-                    width,
-                    height,
-                    renderer!!.camera
-            )
+            renderer.loadBuffer(width, height)
         }
 
         display.onUpdateCallback = { dt ->
-            if (display.isKeyDown(GLFW_KEY_W)) renderer?.camera?.forward(speed * dt)
-            if (display.isKeyDown(GLFW_KEY_S)) renderer?.camera?.forward(-speed * dt)
-            if (display.isKeyDown(GLFW_KEY_A)) renderer?.camera?.right(-speed * dt)
-            if (display.isKeyDown(GLFW_KEY_D)) renderer?.camera?.right(speed * dt)
-            if (display.isKeyDown(GLFW_KEY_SPACE)) renderer?.camera?.up(speed * dt)
-            if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer?.camera?.up(-speed * dt)
+            if (display.isKeyDown(GLFW_KEY_W)) renderer.camera.forward(speed * dt)
+            if (display.isKeyDown(GLFW_KEY_S)) renderer.camera.forward(-speed * dt)
+            if (display.isKeyDown(GLFW_KEY_A)) renderer.camera.right(-speed * dt)
+            if (display.isKeyDown(GLFW_KEY_D)) renderer.camera.right(speed * dt)
+            if (display.isKeyDown(GLFW_KEY_SPACE)) renderer.camera.up(speed * dt)
+            if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer.camera.up(-speed * dt)
 
             sphere.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
             sphere2.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
@@ -195,11 +160,11 @@ object Main {
         }
 
         display.onDrawCallback = {
-            renderer?.renderToFramebuffer()
+            renderer.renderToFramebuffer()
+            Draw.texture(renderer.getTexture())
 //            (shape as ShapeUnion).getChildren().map { child ->
 //                child.setTranslation(vec3(0f, 0f, 0f))
 //            }
-             Draw.texture(renderer?.texture!!)
 //            buffer?.debugDraw()
         }
 

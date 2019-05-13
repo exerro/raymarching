@@ -20,6 +20,14 @@ sealed class Shape {
     abstract fun getMaterialFunction(): String
     open fun compileDistanceFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
     open fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
+
+    open fun lock() {
+        getUniforms().values.map { it.lock() }
+    }
+
+    open fun unlock() {
+        getUniforms().values.map { it.unlock() }
+    }
 }
 
 abstract class MaterialShape(internal val material: Material): Shape() {
@@ -28,6 +36,16 @@ abstract class MaterialShape(internal val material: Material): Shape() {
 
     override fun getMaterialFunction(): String
             = "MaterialDistance(\$material, \$distance)"
+
+    override fun lock() {
+        super.lock()
+        material.colour.lock()
+    }
+
+    override fun unlock() {
+        super.unlock()
+        material.colour.unlock()
+    }
 }
 
 abstract class ShapeContainer: Shape() {
@@ -35,6 +53,16 @@ abstract class ShapeContainer: Shape() {
      * Gets the list of children of this shape
      */
     abstract fun getChildren(): List<Shape>
+
+    override fun lock() {
+        super.lock()
+        getChildren().map { it.lock() }
+    }
+
+    override fun unlock() {
+        super.unlock()
+        getChildren().map { it.unlock() }
+    }
 }
 
 fun <S: Shape> S.setTranslation(translation: vec3): S {
