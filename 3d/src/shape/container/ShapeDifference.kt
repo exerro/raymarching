@@ -8,10 +8,7 @@ class ShapeDifference(private val a: Shape, private val b: Shape): ShapeContaine
     override fun getHeader(): String?
             = "DistanceData opDifferenceData(DistanceData a, DistanceData b) {\n" +
             "\treturn a.distance > -b.distance ? a : DistanceData(b.material, -b.distance);\n" +
-            "}\n\n" +
-            "float opDifference(float a, float b) {\n" +
-            "\treturn max(a, -b);\n" +
-            "}"
+            "}\n\n"
 
     override fun getFunction(): String
             = "opDifferenceData($1, $2)"

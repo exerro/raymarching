@@ -35,13 +35,23 @@ object Main {
                         Sphere(4.5f).setColour(0.3f, 0.9f, 0.9f)
                 ).setTranslation(vec3(20f, 0f, 0f))
         )
+        val transition = ShapeTransition(
+                ShapeDissolve(
+                        3f,
+                        Sphere(5f).setTranslation(vec3(-40f, 0f, 0f)),
+                        Sphere(4f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-40f, 2f, 0f))
+                ),
+                Box(vec3(10f)).setColour(1f, 0.5f, 0.5f).setTranslation(vec3(-40f, 0f, 0f)),
+                0.5f
+        )
         var shape: Shape = ShapeUnion(
                 ShapeDissolve(
                         5f,
                         blend,
                         sphere
                 ),
-                sphere2
+                sphere2,
+                transition
         )
 
         fun box_outline(size: vec3): Shape {
@@ -130,6 +140,7 @@ object Main {
 //            shape.rotateBy(vec3(0f, -dt/3, 0f))
             line.rotateBy(vec3(0f, -dt, 0f))
             blend.setFactor(4.5f + Math.sin(t.toDouble() * 10).toFloat() * 4f)
+            transition.setTransition(0.5f + Math.sin(t.toDouble()).toFloat() * 0.5f)
 //            shape.setScale(1.4f + 0.5f * Math.sin(3 * t.toDouble()).toFloat())
 //            blend.setFactor(1 + Math.sin(t.toDouble() * 10).toFloat() * 3)
 
