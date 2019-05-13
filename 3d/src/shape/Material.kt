@@ -8,7 +8,7 @@ data class Material(var colour: vec4) {
     constructor(colour: vec3): this(colour.vec4(1.0f))
 
     fun setUniforms(shader: GLShaderProgram, uniformName: String) {
-        shader.setUniform("$uniformName.colour", colour)
+        shader.setUniform("$uniformName.colour", colour.vec3())
     }
 }
 

@@ -108,10 +108,8 @@ class Display(var width: Int, var height: Int, val title: String = "Display") : 
             onDrawCallback?.invoke()
 
             // swap the color buffers to present the content to the screen
-            val t1 = System.currentTimeMillis()
             glfwSwapBuffers(window)
             glFlush()
-            System.out.println("${System.currentTimeMillis() - t1}ms/${dt}ms")
 
             // poll for window events
             // the key callback above will only be invoked during this call

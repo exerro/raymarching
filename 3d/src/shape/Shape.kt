@@ -38,37 +38,29 @@ sealed class Shape {
         return this
     }
 
-//    fun setScale(scale: vec3): Shape {
-//        this.scale = scale
-//        return this
-//    }
-//
-//    fun scaleBy(scale: vec3): Shape {
-//        this.scale = this.scale.mul(scale)
-//        return this
-//    }
+    fun setScale(scale: vec3): Shape {
+        this.scale = scale
+        return this
+    }
 
-    fun getTransformation(): mat4 = mat4_translate(translation).mul(rotation.toRotationMatrix()).mul(mat4_scale(scale))
+    fun scaleBy(scale: vec3): Shape {
+        this.scale = this.scale.mul(scale)
+        return this
+    }
 
-    /**
-     * Returns a header to be prepended to shader code, useful for defining a function
-     */
-    abstract fun getHeader(): String?
+    fun getScale(): vec3 = scale
 
-    /**
-     * Return GLSL code to compute just the distance to the object
-     */
-    abstract fun getDistanceFunction(): String
-
-    /**
-     * Returns GLSL code to compute the distance to the object and material properties
-     */
-    abstract fun getFunction(): String
+    fun getTransformationMatrix(): mat4 = mat4_translate(translation).mul(rotation.toRotationMatrix()).mul(mat4_scale(scale))
 
     /**
      * Return a list of uniform values
      */
     abstract fun getUniforms(): Map<String, ShapeUniformValue>
+
+    abstract fun getDistanceFunction2(): String
+    abstract fun getMaterialFunction2(): String
+    open fun compileDistanceFunctionHeader2(builder: ShaderCompiler): ShaderCompiler? = null
+    open fun compileMaterialFunctionHeader2(builder: ShaderCompiler): ShaderCompiler? = null
 }
 
 abstract class MaterialShape(material: Material): Shape() {
@@ -93,12 +85,6 @@ abstract class MaterialShape(material: Material): Shape() {
         return this
     }
 
-    /**
-     * Returns GLSL code to compute the distance to the object and material properties
-     */
-    override fun getFunction(): String {
-        return "DistanceData(\$material, (${getDistanceFunction()}) * \$transformation_scale)"
-    }
 }
 
 abstract class ShapeContainer: Shape() {

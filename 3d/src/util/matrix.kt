@@ -18,6 +18,12 @@ class mat4(vararg val elements: Float) {
             elements[12] * v.x + elements[13] * v.y + elements[14] * v.z + elements[15] * v.w
     )
 
+    fun mat3(): mat3 = mat3(
+            elements[0], elements[1], elements[2],
+            elements[4], elements[5], elements[6],
+            elements[8], elements[9], elements[10]
+    )
+
     fun translateBy(translation: vec3): mat4 = mul(mat4_translate(translation))
     fun scaleBy(scale: vec3): mat4 = mul(mat4_scale(scale))
 
@@ -165,11 +171,35 @@ class mat4(vararg val elements: Float) {
     }
 }
 
+class mat3(vararg val elements: Float) {
+    fun mul(other: mat3): mat3 {
+        val result = FloatArray(9)
+
+        for (i in 0 .. 2) for (j in 0 .. 2) for (k in 0 .. 2) {
+            result[i * 3 + j] += elements[i * 3 + k] * other.elements[k * 3 + j]
+        }
+
+        return mat3(*result)
+    }
+
+    fun mul(v: vec3): vec3 = vec3(
+            elements[0] * v.x + elements[1] * v.y + elements[2] * v.z,
+            elements[3] * v.x + elements[4] * v.y + elements[5] * v.z,
+            elements[6] * v.x + elements[7] * v.y + elements[9] * v.z
+    )
+}
+
 val mat4_identity = mat4(
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f
+)
+
+val mat3_identity = mat3(
+        1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f
 )
 
 fun mat4_translate(translation: vec3) = mat4(

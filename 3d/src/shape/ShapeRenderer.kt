@@ -1,12 +1,12 @@
 package shape
 
 import gl.*
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL14.GL_FUNC_ADD
 import org.lwjgl.opengl.GL14.glBlendEquation
 import org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0
 import util.*
+import kotlin.math.max
 
 class ShapeRenderer(
         private val shader: GLShaderProgram,
@@ -28,22 +28,20 @@ class ShapeRenderer(
     }
 
     fun renderToFramebuffer() {
-        val t = System.currentTimeMillis()
-
         framebuffer.bind()
         glClearColor(0f, 0f, 0f, 1f)
         glClear(GL_COLOR_BUFFER_BIT)
 
+        val time = System.currentTimeMillis()
         setUniforms()
-        val t1 = System.currentTimeMillis()
+        println("${System.currentTimeMillis() - time}ms")
+
         shader.start()
         screen_quad.load()
         glDrawElements(GL_TRIANGLES, screen_quad.vertexCount, GL_UNSIGNED_INT, 0)
         screen_quad.unload()
         shader.stop()
         framebuffer.unbind()
-        val e = System.currentTimeMillis()
-        println("${e-t1}ms/${e-t}ms = ${((e-t1).toFloat()/(e-t)*1000).toInt()/10f}%")
     }
 
     fun renderToBuffer(buffer: GBuffer) {
@@ -105,8 +103,8 @@ class ShapeRenderer(
     private fun setUniforms() {
 //        if (sent) return
         sent = true
-        shader.setUniform("ray_position", camera.position.position())
-        shader.setUniform("transform", camera.rotation.toRotationMatrix())
+        shader.setUniform("cameraPosition", camera.position)
+        shader.setUniform("transform", camera.rotation.toRotationMatrix().mat3())
         shader.setUniform("aspectRatio", aspectRatio)
         shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
         lookupUniform.valueNames.map { (value, name) ->
@@ -119,13 +117,13 @@ class ShapeRenderer(
     }
 
     private fun setTransformationUniforms(shape: Shape, transform: mat4) {
-        val this_transform = transform.mul(shape.getTransformation())
+        val this_transform = transform.mul(shape.getTransformationMatrix())
 
         if (shape is MaterialShape) {
-            shader.setUniform(lookupUniform.transformationNames[shape]!!, this_transform.inverse())
-            shader.setUniform(lookupUniform.transformationNames[shape]!! + "_scale",
-                    this_transform.mul(vec3(1f, 1f, 1f).normalise().direction()).vec3().length()
-            )
+            val scaled = this_transform.mul(vec3(1f, 1f, 1f).direction()).vec3()
+            val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
+            shader.setUniform("${lookupUniform.shapeNames[shape]!!}_transform", this_transform.inverse())
+            shader.setUniform("${lookupUniform.shapeNames[shape]!!}_divisor", divisor)
         }
         else if (shape is ShapeContainer) {
             for (child in shape.getChildren()) {

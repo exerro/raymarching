@@ -2,10 +2,12 @@ import gl.*
 import org.lwjgl.glfw.GLFW.*
 import shape.*
 import shape.container.*
-import shape.primitive.Box
-import shape.primitive.Line
+//import shape.primitive.Line
 import shape.primitive.Sphere
+import shape.primitive.Box
 import util.*
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object Main {
     var t: Float = 0.0f
@@ -15,55 +17,66 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         val display = Display(WIDTH, HEIGHT)
+//        val compiler = ShaderCompiler()
         val compiler = ShaderCompiler()
         val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f))
         val sphere2 = Sphere(6f).setColour(1.0f, 0.5f, 0.5f).setTranslation(vec3(-4f, 2f, 0f))
-        val line = Line(vec3(-7.5f, -7.5f, 7.5f), vec3(7.5f, 7.5f, -7.5f), 2.0f).setTranslation(vec3(7.5f, 7.5f, 7.5f))
-        val cube = Box(vec3(5.0f, 5.0f, 5.0f)).setTranslation(vec3(-10.0f, -10.0f, 5.0f))
-        val blend = ShapeBlend(
-                2f,
-                Sphere(6f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(4f, -3f, 0f)),
-                Sphere(8f).setColour(0.3f, 0.9f, 0.6f).setTranslation(vec3(0f, 5f, -3f)),
-                Sphere(10f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-10f, 2f, -2f)),
-                line,
-                cube,
-                ShapeDifference(
-                        ShapeIntersection(
-                                Sphere(5f).setColour(0.9f, 0.9f, 0.3f),
-                                Box(vec3(4f)).setColour(0.9f, 0.3f, 0.9f).setTranslation(vec3(0f, 0f, 0f))
-                        ),
-                        Sphere(4.5f).setColour(0.3f, 0.9f, 0.9f)
-                ).setTranslation(vec3(20f, 0f, 0f))
-        )
-        val transition = ShapeTransition(
-                ShapeDissolve(
-                        3f,
-                        Sphere(5f).setTranslation(vec3(-40f, 0f, 0f)),
-                        Sphere(4f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-40f, 2f, 0f))
-                ),
-                Box(vec3(10f)).setColour(1f, 0.5f, 0.5f).setTranslation(vec3(-40f, 0f, 0f)),
-                0.5f
-        )
+//        val line = Line(vec3(-7.5f, -7.5f, 7.5f), vec3(7.5f, 7.5f, -7.5f), 2.0f).setTranslation(vec3(7.5f, 7.5f, 7.5f))
+//        val cube = Box(vec3(5.0f, 5.0f, 5.0f)).setTranslation(vec3(-10.0f, -10.0f, 5.0f))
+//        val blend = ShapeBlend(
+//                2f,
+//                Sphere(6f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(4f, -3f, 0f)),
+//                Sphere(8f).setColour(0.3f, 0.9f, 0.6f).setTranslation(vec3(0f, 5f, -3f)),
+//                Sphere(10f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-10f, 2f, -2f)),
+//                line,
+//                cube,
+//                ShapeDifference(
+//                        ShapeIntersection(
+//                                Sphere(5f).setColour(0.9f, 0.9f, 0.3f),
+//                                Box(vec3(4f)).setColour(0.9f, 0.3f, 0.9f).setTranslation(vec3(0f, 0f, 0f))
+//                        ),
+//                        Sphere(4.5f).setColour(0.3f, 0.9f, 0.9f)
+//                ).setTranslation(vec3(20f, 0f, 0f))
+//        )
+//        val transition = ShapeTransition(
+//                ShapeDissolve(
+//                        3f,
+//                        Sphere(5f).setTranslation(vec3(-40f, 0f, 0f)),
+//                        Sphere(4f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-40f, 2f, 0f))
+//                ),
+//                Box(vec3(10f)).setColour(1f, 0.5f, 0.5f).setTranslation(vec3(-40f, 0f, 0f)),
+//                0.5f
+//        )
         var shape: Shape = ShapeUnion(
-                ShapeDissolve(
-                        5f,
-                        blend,
-                        sphere
-                ),
+//                ShapeDissolve(
+//                        5f,
+//                        blend,
+//                        sphere
+//                ),
                 sphere2,
-                transition
+//                transition
+                Sphere(1f)
         )
 
-        fun box_outline(size: vec3): Shape {
-            return ShapeDifference(
-                    Box(size),
-                    ShapeUnion(
-                            Box(size.mul(vec3(1.01f, 0.9f, 0.9f))),
-                            Box(size.mul(vec3(0.9f, 1.01f, 0.9f))),
-                            Box(size.mul(vec3(0.9f, 0.9f, 1.01f)))
-                    )
-            )
-        }
+        var stuff = arrayOf<Shape>()
+        val spheres = ((1 .. 7).map { a -> (1 .. 7).map { b -> Pair(a, b) } }.flatten().map { (a, b) -> Sphere(0.4f).setTranslation(vec3(a.toFloat(), b.toFloat(), 0f)) })
+
+        spheres.map { v -> stuff = arrayOf(*stuff, v) }
+
+        shape = ShapeUnion(
+                *stuff
+        )
+
+//        fun box_outline(size: vec3): Shape {
+//            return ShapeDifference(
+//                    Box(size),
+//                    ShapeUnion(
+//                            Box(size.mul(vec3(1.01f, 0.9f, 0.9f))),
+//                            Box(size.mul(vec3(0.9f, 1.01f, 0.9f))),
+//                            Box(size.mul(vec3(0.9f, 0.9f, 1.01f)))
+//                    )
+//            )
+//        }
 
 //        shape = ShapeUnion(
 //                box_outline(vec3(10f)),
@@ -71,8 +84,17 @@ object Main {
 //                box_outline(vec3(4f))
 //        )
 
-        val vertexShader = compiler.buildVertexShader()
-        val fragmentShader = compiler.buildFragmentShader(shape)
+        loadUniformNameLookup(shape, compiler.lookup)
+
+        compiler.generateFragmentShaderStart()
+        compiler.generateFragmentShaderMain()
+        compiler.generateFragmentShaderUniforms(shape)
+        compiler.generateDistanceFunctionHeaders(shape)
+        compiler.generateMaterialFunctionHeaders(shape)
+        compiler.generateFunctionDefinitions(shape)
+
+        val vertexShader = String(Files.readAllBytes(Paths.get("src/glsl/vertex.glsl")))
+        val fragmentShader = compiler.getText()
         var renderer: ShapeRenderer? = null
         var buffer: GBuffer? = null
 
@@ -136,11 +158,11 @@ object Main {
 
             sphere.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
             sphere2.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
-            cube.setTranslation(vec3(-10.0f, Math.sin(t.toDouble() * 2).toFloat() * 8 - 2, 5.0f))
-//            shape.rotateBy(vec3(0f, -dt/3, 0f))
-            line.rotateBy(vec3(0f, -dt, 0f))
-            blend.setFactor(4.5f + Math.sin(t.toDouble() * 10).toFloat() * 4f)
-            transition.setTransition(0.5f + Math.sin(t.toDouble()).toFloat() * 0.5f)
+//            cube.setTranslation(vec3(-10.0f, Math.sin(t.toDouble() * 2).toFloat() * 8 - 2, 5.0f))
+////            shape.rotateBy(vec3(0f, -dt/3, 0f))
+//            line.rotateBy(vec3(0f, -dt, 0f))
+//            blend.setFactor(4.5f + Math.sin(t.toDouble() * 10).toFloat() * 4f)
+//            transition.setTransition(0.5f + Math.sin(t.toDouble()).toFloat() * 0.5f)
 //            shape.setScale(1.4f + 0.5f * Math.sin(3 * t.toDouble()).toFloat())
 //            blend.setFactor(1 + Math.sin(t.toDouble() * 10).toFloat() * 3)
 

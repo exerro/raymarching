@@ -2,11 +2,8 @@ package gl
 
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
-import util.vec2
-import util.vec3
-import util.vec4
 import org.lwjgl.opengl.GL32
-import util.mat4
+import util.*
 
 class GLShaderProgram(private val programID: Int, private val fragmentID: Int, private val geometryID: Int?, private val vertexID: Int, private val instanced: Boolean): GLResource {
     private var active: Boolean = false
@@ -44,6 +41,12 @@ class GLShaderProgram(private val programID: Int, private val fragmentID: Int, p
     fun setUniform(name: String, value: mat4) {
         if (!active) GL20.glUseProgram(programID)
         GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(programID, name), true, value.elements)
+        if (!active) GL20.glUseProgram(0)
+    }
+
+    fun setUniform(name: String, value: mat3) {
+        if (!active) GL20.glUseProgram(programID)
+        GL20.glUniformMatrix3fv(GL20.glGetUniformLocation(programID, name), true, value.elements)
         if (!active) GL20.glUseProgram(0)
     }
 
