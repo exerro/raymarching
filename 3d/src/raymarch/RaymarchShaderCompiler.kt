@@ -34,6 +34,7 @@ class RaymarchShaderCompiler: RootBuilder() {
             .appendLine()
             .appendStruct("Material") { block -> block
                     .appendDeclaration("vec3", "colour")
+                    .appendDeclaration("float", "reflectivity")
             }
             .appendLine()
             .appendStruct("MaterialDistance") { block -> block
@@ -107,9 +108,8 @@ class RaymarchShaderCompiler: RootBuilder() {
                     .appendDefinition("vec3", "reflection", "normalize(reflect(position - cameraPosition, normal))")
                     .appendDefinition("float", "ambient", "0.3")
                     .appendDefinition("float", "diffuse", "max(0, dot(normal, -LIGHT_DIRECTION)) * 0.7")
-                    .appendDefinition("float", "specular", "pow(max(0, dot(reflection, -LIGHT_DIRECTION)), 30) * 0.5")
                     .appendDefinition("float", "shadowFactor", "calculateShadowFactor(position, normal)")
-                    .appendReturn("ambient + shadowFactor * (diffuse + specular)")
+                    .appendReturn("ambient + shadowFactor * diffuse")
             }
             .appendLine()
             // calculatePointColour determines the colour of a point in 3D space using the material information and lighting
@@ -119,22 +119,6 @@ class RaymarchShaderCompiler: RootBuilder() {
                     .appendReturn("material.colour * lighting")
             }
             .appendLine()
-
-    fun generateDefaultFragmentShaderMain(): RaymarchShaderCompiler
-            =appendFunction("void", "main") { block -> block
-            .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
-            .appendDefinition("vec4", "result", "raymarch(cameraPosition, direction)")
-            .appendLine()
-            .appendLine()
-            .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
-                    .appendDefinition("vec3", "position", "cameraPosition + direction * result.x")
-                    .appendDefinition("Material", "material", "getMaterialAt(position)")
-                    .appendStatement("gl_FragColor = vec4(calculatePointColour(position, material), 1)")
-                    .appendStatement("return")
-            }
-            .appendLine()
-            .appendStatement("gl_FragColor = vec4(0.7, 0.8, 0.9, 1) * max(0, (direction.y + 0.2) * 0.8)")
-    }
 
     fun generateReflectionFragmentShaderMain(): RaymarchShaderCompiler
             =appendFunction("void", "main") { block -> block
@@ -151,19 +135,39 @@ class RaymarchShaderCompiler: RootBuilder() {
                             .appendStatement("position += direction * result.x")
                             .appendDefinition("Material", "material", "getMaterialAt(position)")
                             .appendDefinition("vec3", "normal", "estimateNormal(position)")
-                            .appendDefinition("float", "reflectivity", "${1f/(1+options.maxReflectionCount())}")
-                            .appendStatement("computedColour += vec4(calculatePointColour(position, material), 1 - reflectivity) * min(1 - reflectivity, 1 - computedColour.a)")
+                            .appendDefinition("float", "reflectivity", "material.reflectivity")
+                            .appendStatement("computedColour += vec4(calculatePointColour(position, material), 1) * (1 - reflectivity) * (1 - computedColour.w)")
                             .appendStatement("++reflectionBounces")
                             .appendStatement("direction = reflect(direction, normal)")
                             .appendStatement("position += direction * ${INTERSECTION_DISTANCE * 10}")
                             .appendStatement("continue")
                     }
+                    .appendStatement("computedColour += vec4(0.7, 0.8, 0.9, 1) * (direction.y + 1) * 0.5 * (1 - computedColour.w)") // ~skybox
                     .appendStatement("break")
             }
             .appendLine()
-            .appendStatement("computedColour += vec4(0.7, 0.8, 0.9, 1) * max(0, (direction.y + 0.2) * 0.8) * (1 - computedColour.w)") // ~skybox
+            .appendIf("computedColour.w == 0") { iblock -> iblock
+                    .appendStatement("computedColour == vec4(0.7, 0.8, 0.9, 1)")
+            }
             .appendLine()
             .appendStatement("gl_FragColor = vec4(computedColour.xyz, 1)")
+            .appendStatement("gl_FragColor += vec4(vec3(pow(1 - computedColour.w, 0.2)), 0) * pow(max(0, dot(-LIGHT_DIRECTION, direction)), 400)")
+    }
+
+    fun generateDefaultFragmentShaderMain(): RaymarchShaderCompiler
+            =appendFunction("void", "main") { block -> block
+            .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
+            .appendDefinition("vec4", "result", "raymarch(cameraPosition, direction)")
+            .appendLine()
+            .appendLine()
+            .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
+                    .appendDefinition("vec3", "position", "cameraPosition + direction * result.x")
+                    .appendDefinition("Material", "material", "getMaterialAt(position)")
+                    .appendStatement("gl_FragColor = vec4(calculatePointColour(position, material), 1)")
+                    .appendStatement("return")
+            }
+            .appendLine()
+            .appendStatement("gl_FragColor = vec4(0.7, 0.8, 0.9, 1) * max(0, (direction.y + 0.2) * 0.8)")
     }
 
     fun generateMinDistanceFragmentShaderMain(): RaymarchShaderCompiler
@@ -251,7 +255,7 @@ class RaymarchShaderCompiler: RootBuilder() {
         }
         else if (shape is MaterialShape) {
             propertiesRemapped
-                    .replace("\$material", if (shape.getMaterial().colour.isDynamic()) { shape.getMaterial().colour.changeHandled(); "${lookup.shapeNames[shape]!!}_material" } else shape.getMaterial().colour.getGLSLValue())
+                    .replace("\$material", if (shape.getMaterial().isDynamic()) { shape.getMaterial().colour.changeHandled(); "${lookup.shapeNames[shape]!!}_material" } else shape.getMaterial().getGLSLValue())
         }
         else {
             "wtff"

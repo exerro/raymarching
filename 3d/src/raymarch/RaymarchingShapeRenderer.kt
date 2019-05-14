@@ -96,12 +96,14 @@ class RaymarchingShapeRenderer(
 
         setUniforms()
 
+        Draw.pushViewport(vec2(framebuffer.width.toFloat(), framebuffer.height.toFloat()))
         shader.start()
         screen_quad.load()
         GL11.glDrawElements(GL11.GL_TRIANGLES, screen_quad.vertexCount, GL11.GL_UNSIGNED_INT, 0)
         screen_quad.unload()
         shader.stop()
         framebuffer.unbind()
+        Draw.popViewport()
     }
 
     private fun setUniforms() {

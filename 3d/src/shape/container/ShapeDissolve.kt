@@ -35,8 +35,9 @@ class ShapeDissolve(factor: Float, private val a: Shape, private val b: Shape): 
             .appendFunction("MaterialDistance", "materialDissolve", Pair("MaterialDistance", "a"), Pair("MaterialDistance", "b"), Pair("float", "k"), Pair("float", "d")) { block -> block
                     .appendDefinition("float", "h", "clamp( 0.5 + 0.5*(a.dist+b.dist)/k, 0, 1 )")
                     .appendDefinition("vec3", "col", "mix(a.material.colour, b.material.colour, 1-h)")
-                    .appendReturn("MaterialDistance(Material(col), d)")
-                    .appendReturn("MaterialDistance(Material(col), mix(a.dist, -b.dist, h) + h*(1-h)*k)")
+                    .appendDefinition("float", "ref", "mix(a.material.reflectivity, b.material.reflectivity, 1-h)")
+                    .appendReturn("MaterialDistance(Material(col, ref), d)")
+                    .appendReturn("MaterialDistance(Material(col, ref), mix(a.dist, -b.dist, h) + h*(1-h)*k)") // TODO
             }
 
     override fun getUniforms(): Map<String, ShaderData<*>>

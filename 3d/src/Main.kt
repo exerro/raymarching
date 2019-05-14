@@ -7,10 +7,7 @@ import raymarch.RenderOptions
 import shape.*
 import shape.container.*
 import shape.primitive.*
-import util.LogType
-import util.Logging
-import util.enable
-import util.vec3
+import util.*
 
 object Main {
     var t: Float = 0.0f
@@ -26,8 +23,8 @@ object Main {
 //        Logging.enable(LogType.SHADER_UNIFORM)
 
         val display = Display(WIDTH, HEIGHT)
-        val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f))
-        val sphere2 = Sphere(6f).setColour(1.0f, 0.5f, 0.5f).setTranslation(vec3(-4f, 2f, 0f))
+        val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f)).setReflectivity(0f)
+        val sphere2 = Sphere(6f).setColour(1.0f, 0.5f, 0.5f).setTranslation(vec3(-4f, 2f, 0f)).setReflectivity(0.5f)
         sphere.dynamicPosition()
         sphere2.dynamicPosition()
 //        val line = Line(vec3(-7.5f, -7.5f, 7.5f), vec3(7.5f, 7.5f, -7.5f), 2.0f).setTranslation(vec3(7.5f, 7.5f, 7.5f))
@@ -48,23 +45,25 @@ object Main {
                 ).setTranslation(vec3(20f, 0f, 0f))
         )
         blend.getFactorUniform().setDynamic()
-        val inner = ShapeUnion(
-                Sphere(1f).setTranslation(vec3(2f, 0f, 0f)).setColour(0f, 1f, 0f),
-                Sphere(1f).setTranslation(vec3(-1.5f, 0f, 2f)).setColour(1f, 0f, 0f),
-                Sphere(1f).setTranslation(vec3(-1.5f, 0f, -2f)).setColour(0f, 0f, 1f)
+        val inner = ShapeBlend(
+                0f,
+                Sphere(1f).setTranslation(vec3(2f, 0f, 0f)).setColour(0f, 0.6f, 0f).setReflectivity(0f),
+                Sphere(1f).setTranslation(vec3(-1.5f, 0f, 2f)).setColour(0.6f, 0f, 0f).setReflectivity(0.3f),
+                Sphere(1f).setTranslation(vec3(-1.5f, 0f, -2f)).setColour(0f, 0f, 0.6f).setReflectivity(0.9f)
         ).setTranslation(vec3(-40f, 0f, 0f))
         inner.dynamicRotation()
+        inner.getFactorUniform().setDynamic()
         val transition = ShapeTransition(
                 ShapeUnion(
                         ShapeDissolve(
                         3f,
                                 Sphere(5f).setTranslation(vec3(-40f, 0f, 0f)),
-                                Sphere(4f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-40f, 2f, 0f))
+                                Sphere(4f).setColour(0.3f, 0.6f, 0.9f).setTranslation(vec3(-40f, 2f, 0f)).setReflectivity(0.1f)
                         ),
                         inner
                 ),
 //                Sphere(0f).setTranslation(vec3(-40f, 0f, 0f)),
-                Box(vec3(4f)).setColour(1f, 0.5f, 0.5f).setTranslation(vec3(-40f, 0f, 0f)),
+                Box(vec3(4f)).setColour(1f, 0.5f, 0.5f).setTranslation(vec3(-40f, 0f, 0f)).setReflectivity(0f),
                 0f
         )
         transition.getTransitionProperty().setDynamic()
@@ -127,14 +126,13 @@ object Main {
 ////                box_outline(vec3(4f))
 //        )
 
-        shape = transition
-
         lateinit var renderer: RaymarchingShapeRenderer
 
         val speed = 10f
         val options = RenderOptions().enableReflections(2).enableShadows()
         var lastFPS = 0
         var advanceTime = true
+        var drawScale = vec2(1f, 1f)
 
         display.onMouseDownCallback = { _, _ ->
             display.setMouseLocked(true)
@@ -164,7 +162,8 @@ object Main {
         }
 
         display.onResizedCallback = { width, height ->
-            renderer.loadBuffer(width, height)
+            renderer.loadBuffer(width * 2 / 3, height * 2 / 3)
+            drawScale = vec2(1.5f, 1.5f)
         }
 
         display.onKeyPressedCallback = { key, mods ->
@@ -200,6 +199,7 @@ object Main {
 //            cube.setTranslation(vec3(-10.0f, Math.sin(t.toDouble() * 2).toFloat() * 8 - 2, 5.0f))
 ////            shape.rotateBy(vec3(0f, -dt/3, 0f))
 //            line.rotateBy(vec3(0f, -dt, 0f))
+            inner.setFactor(1 + Math.sin(t.toDouble() / 1f).toFloat())
             blend.setFactor(4.5f + Math.sin(t.toDouble() * 5).toFloat() * 4f)
             transition.setTransition(0.5f + Math.sin(t.toDouble()).toFloat() * 0.5f)
             inner.rotateBy(vec3(0f, dt * 3, 0f))
@@ -225,7 +225,7 @@ object Main {
 
         display.onDrawCallback = {
             renderer.renderToFramebuffer()
-            Draw.texture(renderer.getTexture())
+            Draw.texture(renderer.getTexture(), vec2(0f, 0f), drawScale)
 //            buffer?.debugDraw()
         }
 

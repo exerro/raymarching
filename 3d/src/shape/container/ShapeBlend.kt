@@ -32,7 +32,8 @@ class ShapeBlend(factor: Float, private vararg val children: Shape): ShapeContai
             .appendFunction("MaterialDistance", "materialBlend", Pair("MaterialDistance", "a"), Pair("MaterialDistance", "b"), Pair("float", "k")) { block -> block
                     .appendDefinition("float", "h", "clamp( 0.5 + 0.5*(a.dist-b.dist)/k, 0, 1 )")
                     .appendDefinition("vec3", "col", "mix(a.material.colour, b.material.colour, h)")
-                    .appendReturn("MaterialDistance(Material(col), mix(a.dist, b.dist, h) - h*(1-h)*k)")
+                    .appendDefinition("float", "ref", "mix(a.material.reflectivity, b.material.reflectivity, h)")
+                    .appendReturn("MaterialDistance(Material(col, ref), mix(a.dist, b.dist, h) - h*(1-h)*k)")
             }
 
     override fun getUniforms(): Map<String, ShaderData<*>>

@@ -125,4 +125,9 @@ fun <M: MaterialShape> M.setColour(colour: vec3): M {
 fun <M: MaterialShape> M.setColour(r: Float, g: Float, b: Float): M
         = setColour(vec3(r, g, b))
 
+fun <M: MaterialShape> M.setReflectivity(reflectivity: Float): M {
+    this.material.reflectivity.setValue(reflectivity)
+    return this
+}
+
 data class TransformModificationException(val property: String, val shape: ShapeTransform): Throwable()
