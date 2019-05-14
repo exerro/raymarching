@@ -18,6 +18,7 @@ fun Logging.log(logType: LogType = LogType.INFO, log: () -> String) {
 
 enum class LogType {
     INFO,
+    DEBUG,
     SHADER_UNIFORM,
     SHADER_COMPILE,
     WARNING,

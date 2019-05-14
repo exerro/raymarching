@@ -6,10 +6,10 @@ import util.appendReturn
 
 class ShapeUnion(private vararg val children: Shape): ShapeContainer() {
     override fun getDistanceFunction(): String
-            = (2 .. children.size).fold("\$1") { acc, i -> "min($acc, \$$i)" }
+            = applyToAllChildren("min(\$a, \$b)")
 
     override fun getMaterialFunction(): String
-            = (2 .. children.size).fold("\$1") { acc, i -> "materialUnion($acc, \$$i)" }
+            = applyToAllChildren("materialUnion(\$a, \$b)")
 
     override fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = builder
             .appendFunction("MaterialDistance", "materialUnion", Pair("MaterialDistance", "a"), Pair("MaterialDistance", "b")) { block -> block

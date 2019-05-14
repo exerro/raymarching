@@ -76,7 +76,7 @@ class ShaderCompiler: RootBuilder() {
             // estimateNormal estimates... you guessed it... the normal (distance gradient at a point in 3D space)
             .appendFunction("float", "calculateShadowFactor", Pair("vec3", "position"), Pair("vec3", "normal")) { block -> block
                     .conditional(enableShadows) { sblock -> sblock
-                            .appendDefinition("vec4", "trace", "raymarch(position - LIGHT_DIRECTION * ${INTERSECTION_DISTANCE * 5}, -LIGHT_DIRECTION)")
+                            .appendDefinition("vec4", "trace", "raymarch(position - LIGHT_DIRECTION * ${INTERSECTION_DISTANCE * 10}, -LIGHT_DIRECTION)")
                             .appendIf("trace.x < $MAX_DISTANCE") { sblock -> sblock
                                     .appendReturn("0")
                             }

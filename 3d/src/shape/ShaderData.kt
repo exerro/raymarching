@@ -23,6 +23,7 @@ abstract class ShaderData<T>(private var value: T): ChangingProperty() {
     fun getValue(): T = value
     fun setValue(value: T) {
         if (!dynamic && locked) throw StaticValueChangeException(this, "non-dynamic property changed")
+        notifyChanged()
         this.value = value
     }
 }

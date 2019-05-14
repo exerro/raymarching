@@ -54,6 +54,9 @@ abstract class ShapeContainer: Shape() {
      */
     abstract fun getChildren(): List<Shape>
 
+    protected fun applyToAllChildren(func: String): String
+        = (2 .. getChildren().size).fold("\$1") { acc, i -> func.replace("\$a", acc).replace("\$b", "\$$i") }
+
     override fun lock() {
         super.lock()
         getChildren().map { it.lock() }

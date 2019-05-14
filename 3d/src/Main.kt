@@ -17,10 +17,11 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        Logging.enable(LogType.INFO)
-        Logging.enable(LogType.WARNING)
         Logging.enable(LogType.ERROR)
+        Logging.enable(LogType.WARNING)
+//        Logging.enable(LogType.INFO)
         Logging.enable(LogType.SHADER_COMPILE)
+//        Logging.enable(LogType.SHADER_UNIFORM)
 
         val display = Display(WIDTH, HEIGHT)
         val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f))
@@ -69,18 +70,25 @@ object Main {
                             a.toFloat(),
                             b.toFloat(),
                             Math.sin((a.toFloat() * 5 + b.toFloat() * 3).toDouble()).toFloat()
-                    ))
-                    .setColour(a.toFloat() / 5f, b.toFloat() / 5f, 0f)
-                    .setColour(1f, 1f, 1f)
+                    ).mul(1.2f))
+                    .setColour(
+                            a.toFloat() / 5f,
+                            b.toFloat() / 5f,
+                            1 + Math.sin((a.toFloat() * 5 + b.toFloat() * 3).toDouble()).toFloat() / 2
+                    )
+//                    .setColour(1f, 1f, 1f)
                     .setScale(1f)
         })
 
         spheres.map { v -> stuff = arrayOf(*stuff, v) }
 
-        shape = ShapeUnion(
+        shape = ShapeBlend(
+                1.7f,
                 *stuff,
-                Box(vec3(10f, 0.1f, 10f)).setRotation(vec3(0f, 0f, 0.5f))
+                Box(vec3(10f, 0.1f, 10f))
         )
+
+        shape.getFactorUniform().setDynamic()
 //        shape.dynamicPosition()
 //        shape.setScale(10f)
 //        shape.dynamicPosition()
@@ -158,6 +166,8 @@ object Main {
 
 //            box.rotateBy(vec3(0f, -dt*2, 0f))
 
+            shape.setFactor(1f + Math.sin(t.toDouble()).toFloat() * 0.8f)
+
             if (display.FPS != lastFPS) {
                 println("FPS: ${display.FPS}")
                 lastFPS = display.FPS
@@ -169,7 +179,7 @@ object Main {
         display.onDrawCallback = {
             renderer.renderToFramebuffer()
             Draw.texture(renderer.getTexture())
-            (shape as ShapeUnion).getChildren().map { child ->
+            (shape as ShapeContainer).getChildren().map { child ->
                 child.setTranslation(vec3(child.getPosition().x, child.getPosition().y, Math.sin((t * 3 + child.getPosition().x * 5 + child.getPosition().y * 3).toDouble()).toFloat()))
             }
 //            buffer?.debugDraw()
