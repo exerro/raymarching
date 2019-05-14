@@ -29,7 +29,7 @@ class ShapeRenderer(
         loadUniformNameLookup(shape, compiler.lookup)
 
         compiler.generateFragmentShaderStart()
-        compiler.generateFragmentShaderMain()
+        compiler.generateDefaultFragmentShaderMain()
         compiler.generateFragmentShaderUniforms(shape)
         compiler.generateDistanceFunctionHeaders(shape)
         compiler.generateMaterialFunctionHeaders(shape)

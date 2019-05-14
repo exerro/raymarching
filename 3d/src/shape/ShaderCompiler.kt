@@ -9,6 +9,7 @@ class ShaderCompiler: RootBuilder() {
     private val MAX_DISTANCE= 500
     private val INTERSECTION_DISTANCE= 0.01f
     private val EPSILON = 0.0001f
+    private val enableShadows = true
     val lookup = UniformNameLookup()
 
     fun generateFragmentShaderStart(): ShaderCompiler
@@ -72,13 +73,34 @@ class ShaderCompiler: RootBuilder() {
                             "${distanceFunctionCall("vec3(p.x, p.y, p.z + $EPSILON)")} - ${distanceFunctionCall("vec3(p.x, p.y, p.z - $EPSILON)")}))")
             }
             .appendLine()
+            // estimateNormal estimates... you guessed it... the normal (distance gradient at a point in 3D space)
+            .appendFunction("float", "calculateShadowFactor", Pair("vec3", "position"), Pair("vec3", "normal")) { block -> block
+                    .conditional(enableShadows) { sblock -> sblock
+                            .appendDefinition("vec4", "trace", "raymarch(position - LIGHT_DIRECTION * ${INTERSECTION_DISTANCE * 5}, -LIGHT_DIRECTION)")
+                            .appendIf("trace.x < $MAX_DISTANCE") { sblock -> sblock
+                                    .appendReturn("0")
+                            }
+                            .appendReturn("1")
+                        // motherfucking shadows fuck everything aaaagh
+//                            .appendReturn("distanceFunction(position + normal * 0.1) / 0.1")
+//                            .appendDefinition("vec4", "trace_fine1", "raymarch(position - LIGHT_DIRECTION / dot(-LIGHT_DIRECTION, normal), -LIGHT_DIRECTION)")
+//                            .appendReturn("distanceFunction(position + normal * 0.1) / 0.1")
+//                            .appendDefinition("vec4", "trace_fine", "raymarch(position - LIGHT_DIRECTION / dot(-LIGHT_DIRECTION, normal), -LIGHT_DIRECTION)")
+//                            .appendReturn("pow(clamp(trace_fine.y, 0, 1), 3)")
+                    }
+                    .conditional(!enableShadows) { sblock -> sblock
+                            .appendReturn("1")
+                    }
+            }
+            .appendLine()
             // calculateLightingAt determines the scalar lighting value of a point in 3D space using its position and normal
             .appendFunction("float", "calculateLightingAt", Pair("vec3", "position"), Pair("vec3", "normal")) { block -> block
                     .appendDefinition("vec3", "reflection", "normalize(reflect(position - cameraPosition, normal))")
                     .appendDefinition("float", "ambient", "0.3")
                     .appendDefinition("float", "diffuse", "max(0, dot(normal, -LIGHT_DIRECTION)) * 0.7")
                     .appendDefinition("float", "specular", "pow(max(0, dot(reflection, -LIGHT_DIRECTION)), 30) * 0.5")
-                    .appendReturn("ambient + diffuse + specular")
+                    .appendDefinition("float", "shadowFactor", "calculateShadowFactor(position, normal)")
+                    .appendReturn("ambient + shadowFactor * (diffuse + specular)")
             }
             .appendLine()
             // calculatePointColour determines the colour of a point in 3D space using the material information and lighting
@@ -90,13 +112,11 @@ class ShaderCompiler: RootBuilder() {
             }
             .appendLine()
 
-    fun generateFragmentShaderMain(): ShaderCompiler
+    fun generateDefaultFragmentShaderMain(): ShaderCompiler
             =appendFunction("void", "main") { block -> block
             .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
             .appendDefinition("vec4", "result", "raymarch(cameraPosition, direction)")
             .appendLine()
-//            .appendStatement("gl_FragColor = vec4(direction, 1)") // TODO
-//            .appendStatement("return")
             .appendLine()
             .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
                     .appendStatement("gl_FragColor = vec4(calculatePointColour(cameraPosition + direction * result.x), 1)")
@@ -104,6 +124,17 @@ class ShaderCompiler: RootBuilder() {
             }
             .appendLine()
             .appendStatement("gl_FragColor = vec4(0, 0, 0, 0)")
+    }
+
+    fun generateMinDistanceFragmentShaderMain(): ShaderCompiler
+            =appendFunction("void", "main") { block -> block
+            .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
+            .appendDefinition("vec4", "result", "raymarch(cameraPosition, direction)")
+            .appendLine()
+//            .appendStatement("gl_FragColor = vec4(direction, 1)") // TODO
+//            .appendStatement("return")
+            .appendLine()
+            .appendStatement("gl_FragColor = vec4(vec3(result.y), 1)")
     }
 
     fun generateFragmentShaderUniforms(shape: Shape): ShaderCompiler
@@ -217,7 +248,7 @@ class ShaderCompiler: RootBuilder() {
     private fun transformDivisor(value: String, shape: MaterialShape, ti: TransformInfo): String {
         return when {
             ti.dynamicScale -> "($value / ${lookup.shapeNames[shape]!!}_divisor)"
-            ti.scaled -> "($value * ${1/max(max(1/shape.transform.scale.x, 1/shape.transform.scale.y), 1/shape.transform.scale.z)})"
+            ti.scaled -> "($value * ${max(max(ti.getScale().x, ti.getScale().y), ti.getScale().z)})"
             else -> value
         }
     }

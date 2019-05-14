@@ -3,8 +3,8 @@ import gl.Display
 import gl.Draw
 import org.lwjgl.glfw.GLFW.*
 import shape.*
-import shape.container.ShapeUnion
-import shape.primitive.Sphere
+import shape.container.*
+import shape.primitive.*
 import util.LogType
 import util.Logging
 import util.enable
@@ -63,19 +63,26 @@ object Main {
         )
 
         var stuff = arrayOf<Shape>()
-        val spheres = ((1 .. 2).map { a -> (1 .. 2).map { b -> Pair(a, b) } }.flatten().map { (a, b) ->
+        val spheres = ((1 .. 5).map { a -> (1 .. 5).map { b -> Pair(a, b) } }.flatten().map { (a, b) ->
             Sphere(0.4f)
-                    .setTranslation(vec3(a.toFloat(), b.toFloat(), 0f))
-                    .setColour(vec3(a.toFloat() / 2f, b.toFloat() / 2f, 0f))
+                    .setTranslation(vec3(
+                            a.toFloat(),
+                            b.toFloat(),
+                            Math.sin((a.toFloat() * 5 + b.toFloat() * 3).toDouble()).toFloat()
+                    ))
+                    .setColour(a.toFloat() / 5f, b.toFloat() / 5f, 0f)
+                    .setColour(1f, 1f, 1f)
                     .setScale(1f)
         })
 
         spheres.map { v -> stuff = arrayOf(*stuff, v) }
 
         shape = ShapeUnion(
-                *stuff
+                *stuff,
+                Box(vec3(10f, 0.1f, 10f)).setRotation(vec3(0f, 0f, 0.5f))
         )
-        shape.setScale(5f)
+//        shape.dynamicPosition()
+//        shape.setScale(10f)
 //        shape.dynamicPosition()
 
 //        fun box_outline(size: vec3): Shape {
@@ -97,7 +104,7 @@ object Main {
 
         lateinit var renderer: ShapeRenderer
 
-        val speed = 50f
+        val speed = 20f
         var lastFPS = 0
 
         display.onMouseDownCallback = { _, _ ->
@@ -162,9 +169,9 @@ object Main {
         display.onDrawCallback = {
             renderer.renderToFramebuffer()
             Draw.texture(renderer.getTexture())
-//            (shape as ShapeUnion).getChildren().map { child ->
-//                child.setTranslation(vec3(0f, 0f, 0f))
-//            }
+            (shape as ShapeUnion).getChildren().map { child ->
+                child.setTranslation(vec3(child.getPosition().x, child.getPosition().y, Math.sin((t * 3 + child.getPosition().x * 5 + child.getPosition().y * 3).toDouble()).toFloat()))
+            }
 //            buffer?.debugDraw()
         }
 
