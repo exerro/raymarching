@@ -1,5 +1,6 @@
 package shape.container
 
+import raymarch.RaymarchShaderCompiler
 import shape.*
 import util.appendFunction
 import util.appendReturn
@@ -11,7 +12,7 @@ class ShapeUnion(private vararg val children: Shape): ShapeContainer() {
     override fun getMaterialFunction(): String
             = applyToAllChildren("materialUnion(\$a, \$b)")
 
-    override fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = builder
+    override fun compileMaterialFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = builder
             .appendFunction("MaterialDistance", "materialUnion", Pair("MaterialDistance", "a"), Pair("MaterialDistance", "b")) { block -> block
                     .appendReturn("a.dist < b.dist ? a : b")
             }

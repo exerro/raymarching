@@ -1,5 +1,6 @@
 package shape
 
+import raymarch.RaymarchShaderCompiler
 import util.vec3
 
 sealed class Shape {
@@ -18,8 +19,8 @@ sealed class Shape {
 
     abstract fun getDistanceFunction(): String
     abstract fun getMaterialFunction(): String
-    open fun compileDistanceFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
-    open fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = null
+    open fun compileDistanceFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = null
+    open fun compileMaterialFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = null
 
     open fun lock() {
         getUniforms().values.map { it.lock() }

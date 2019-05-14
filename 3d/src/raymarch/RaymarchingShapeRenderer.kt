@@ -1,16 +1,17 @@
-package shape
+package raymarch
 
 import gl.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
+import shape.*
 import util.*
 import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.math.max
 
-class ShapeRenderer(
-        val camera: Camera = Camera()
+class RaymarchingShapeRenderer(
+        val camera: Camera = shape.Camera()
 ): GLResource {
     private lateinit var shape: Shape
     private lateinit var shader: GLShaderProgram
@@ -21,13 +22,14 @@ class ShapeRenderer(
     private var shapeLoaded: Boolean = false
     private var bufferLoaded: Boolean = false
 
-    fun loadShape(shape: Shape = this.shape) {
+    fun loadShape(shape: Shape = this.shape, options: RenderOptions = RenderOptions()) {
         if (shapeLoaded) { unloadShape() }
         this.shape = shape
-        val compiler = ShaderCompiler()
+        val compiler = RaymarchShaderCompiler()
 
         loadUniformNameLookup(shape, compiler.lookup)
 
+        compiler.setOptions(options)
         compiler.generateFragmentShaderStart()
         compiler.generateDefaultFragmentShaderMain()
         compiler.generateFragmentShaderUniforms(shape)

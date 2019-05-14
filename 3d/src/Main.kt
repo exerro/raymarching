@@ -2,6 +2,8 @@
 import gl.Display
 import gl.Draw
 import org.lwjgl.glfw.GLFW.*
+import raymarch.RaymarchingShapeRenderer
+import raymarch.RenderOptions
 import shape.*
 import shape.container.*
 import shape.primitive.*
@@ -110,7 +112,7 @@ object Main {
 //                box_outline(vec3(4f))
 //        )
 
-        lateinit var renderer: ShapeRenderer
+        lateinit var renderer: RaymarchingShapeRenderer
 
         val speed = 20f
         var lastFPS = 0
@@ -132,8 +134,10 @@ object Main {
 
         display.onLoadCallback = {
             Draw.init()
-            renderer = ShapeRenderer()
-            renderer.loadShape(shape)
+            renderer = RaymarchingShapeRenderer()
+            renderer.loadShape(shape, RenderOptions(
+                    true
+            ))
             renderer.loadBuffer(WIDTH, HEIGHT)
             renderer.camera.forward(-30f)
         }

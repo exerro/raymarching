@@ -1,4 +1,8 @@
-package shape
+package raymarch
+
+import shape.ShaderData
+import shape.Shape
+import shape.ShapeContainer
 
 class UniformNameLookup {
     val valueNames = HashMap<ShaderData<*>, String>()

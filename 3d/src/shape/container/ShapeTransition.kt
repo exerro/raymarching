@@ -1,5 +1,6 @@
 package shape.container
 
+import raymarch.RaymarchShaderCompiler
 import shape.*
 
 class ShapeTransition(private val a: Shape, private val b: Shape, transition: Float): ShapeContainer() {
@@ -11,11 +12,11 @@ class ShapeTransition(private val a: Shape, private val b: Shape, transition: Fl
         TODO("not implemented")
     }
 
-    override fun compileDistanceFunctionHeader(builder: ShaderCompiler): ShaderCompiler {
+    override fun compileDistanceFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler {
         TODO("not implemented")
     }
 
-    override fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler {
+    override fun compileMaterialFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler {
         TODO("not implemented")
     }
 

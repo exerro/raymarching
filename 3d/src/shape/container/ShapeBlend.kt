@@ -1,5 +1,6 @@
 package shape.container
 
+import raymarch.RaymarchShaderCompiler
 import shape.*
 import util.appendDefinition
 import util.appendFunction
@@ -21,13 +22,13 @@ class ShapeBlend(factor: Float, private vararg val children: Shape): ShapeContai
     override fun getMaterialFunction(): String
             = applyToAllChildren("materialBlend(\$a, \$b, \$factor)")
 
-    override fun compileDistanceFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = builder
+    override fun compileDistanceFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = builder
             .appendFunction("float", "opBlend", Pair("float", "a"), Pair("float", "b"), Pair("float", "k")) { block -> block
                     .appendDefinition("float", "h", "clamp( 0.5 + 0.5*(a-b)/k, 0, 1 )")
                     .appendReturn("mix(a, b, h) - h*(1-h)*k")
             }
 
-    override fun compileMaterialFunctionHeader(builder: ShaderCompiler): ShaderCompiler? = builder
+    override fun compileMaterialFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = builder
             .appendFunction("MaterialDistance", "materialBlend", Pair("MaterialDistance", "a"), Pair("MaterialDistance", "b"), Pair("float", "k")) { block -> block
                     .appendDefinition("float", "h", "clamp( 0.5 + 0.5*(a.dist-b.dist)/k, 0, 1 )")
                     .appendDefinition("vec3", "col", "mix(a.material.colour, b.material.colour, h)")

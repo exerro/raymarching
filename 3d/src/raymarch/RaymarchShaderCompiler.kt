@@ -1,18 +1,24 @@
-package shape
+package raymarch
 
+import shape.*
 import util.RootBuilder
 import util.*
 import kotlin.math.max
 
-class ShaderCompiler: RootBuilder() {
+class RaymarchShaderCompiler: RootBuilder() {
     private val MAX_ITERATIONS = 500
     private val MAX_DISTANCE= 500
     private val INTERSECTION_DISTANCE= 0.01f
     private val EPSILON = 0.0001f
-    private val enableShadows = true
+    private lateinit var options: RenderOptions
     val lookup = UniformNameLookup()
 
-    fun generateFragmentShaderStart(): ShaderCompiler
+    fun setOptions(options: RenderOptions): RaymarchShaderCompiler {
+        this.options = options
+        return this
+    }
+
+    fun generateFragmentShaderStart(): RaymarchShaderCompiler
             =appendLine("#version 440 core")
             .appendLine()
             .appendConstant("vec3", "LIGHT_DIRECTION", "normalize(-vec3(2, 3, 1))")
@@ -75,7 +81,7 @@ class ShaderCompiler: RootBuilder() {
             .appendLine()
             // estimateNormal estimates... you guessed it... the normal (distance gradient at a point in 3D space)
             .appendFunction("float", "calculateShadowFactor", Pair("vec3", "position"), Pair("vec3", "normal")) { block -> block
-                    .conditional(enableShadows) { sblock -> sblock
+                    .conditional(options.shadowsEnabled()) { sblock -> sblock
                             .appendDefinition("vec4", "trace", "raymarch(position - LIGHT_DIRECTION * ${INTERSECTION_DISTANCE * 10}, -LIGHT_DIRECTION)")
                             .appendIf("trace.x < $MAX_DISTANCE") { sblock -> sblock
                                     .appendReturn("0")
@@ -88,7 +94,7 @@ class ShaderCompiler: RootBuilder() {
 //                            .appendDefinition("vec4", "trace_fine", "raymarch(position - LIGHT_DIRECTION / dot(-LIGHT_DIRECTION, normal), -LIGHT_DIRECTION)")
 //                            .appendReturn("pow(clamp(trace_fine.y, 0, 1), 3)")
                     }
-                    .conditional(!enableShadows) { sblock -> sblock
+                    .conditional(!options.shadowsEnabled()) { sblock -> sblock
                             .appendReturn("1")
                     }
             }
@@ -112,7 +118,7 @@ class ShaderCompiler: RootBuilder() {
             }
             .appendLine()
 
-    fun generateDefaultFragmentShaderMain(): ShaderCompiler
+    fun generateDefaultFragmentShaderMain(): RaymarchShaderCompiler
             =appendFunction("void", "main") { block -> block
             .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
             .appendDefinition("vec4", "result", "raymarch(cameraPosition, direction)")
@@ -126,7 +132,7 @@ class ShaderCompiler: RootBuilder() {
             .appendStatement("gl_FragColor = vec4(0, 0, 0, 0)")
     }
 
-    fun generateMinDistanceFragmentShaderMain(): ShaderCompiler
+    fun generateMinDistanceFragmentShaderMain(): RaymarchShaderCompiler
             =appendFunction("void", "main") { block -> block
             .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
             .appendDefinition("vec4", "result", "raymarch(cameraPosition, direction)")
@@ -137,10 +143,10 @@ class ShaderCompiler: RootBuilder() {
             .appendStatement("gl_FragColor = vec4(vec3(result.y), 1)")
     }
 
-    fun generateFragmentShaderUniforms(shape: Shape): ShaderCompiler
+    fun generateFragmentShaderUniforms(shape: Shape): RaymarchShaderCompiler
             = generateFragmentShaderUniforms(shape, TransformInfo(shape.transform))
 
-    private fun generateFragmentShaderUniforms(shape: Shape, ti: TransformInfo): ShaderCompiler
+    private fun generateFragmentShaderUniforms(shape: Shape, ti: TransformInfo): RaymarchShaderCompiler
             =appendLine("// uniforms for ${lookup.shapeNames[shape]!!}")
             .foreach(shape.getUniforms().values.filter { it.isDynamic() }) { block, uniform -> block
                     .appendUniform(uniform.getGLSLType(), lookup.valueNames[uniform]!!)
@@ -162,19 +168,19 @@ class ShaderCompiler: RootBuilder() {
                     }
             }
 
-    fun generateDistanceFunctionHeaders(shape: Shape): ShaderCompiler
+    fun generateDistanceFunctionHeaders(shape: Shape): RaymarchShaderCompiler
             =(shape.compileDistanceFunctionHeader(this) ?: this)
-            .conditional(shape is ShapeContainer) { builder: ShaderCompiler -> builder
+            .conditional(shape is ShapeContainer) { builder: RaymarchShaderCompiler -> builder
                     .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileDistanceFunctionHeader(b)?.appendLine() ?: b }
             }
 
-    fun generateMaterialFunctionHeaders(shape: Shape): ShaderCompiler
+    fun generateMaterialFunctionHeaders(shape: Shape): RaymarchShaderCompiler
             =(shape.compileMaterialFunctionHeader(this) ?: this)
             .conditional(shape is ShapeContainer) { builder -> builder
                     .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileMaterialFunctionHeader(b)?.appendLine() ?: b }
             }
 
-    fun generateFunctionDefinitions(shape: Shape): ShaderCompiler
+    fun generateFunctionDefinitions(shape: Shape): RaymarchShaderCompiler
             =appendFunction("float", "distanceFunction", Pair("vec3", "position")) { block -> block.appendReturn(generateDistanceFunction(shape, TransformInfo(shape.transform))) }
             .appendLine()
             .appendFunction("MaterialDistance", "materialFunction", Pair("vec3", "position")) { block -> block.appendReturn(generateMaterialFunction(shape, TransformInfo(shape.transform))) }
