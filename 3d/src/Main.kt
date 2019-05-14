@@ -114,8 +114,10 @@ object Main {
 
         lateinit var renderer: RaymarchingShapeRenderer
 
-        val speed = 20f
+        val speed = 10f
+        val options = RenderOptions()
         var lastFPS = 0
+        var advanceTime = true
 
         display.onMouseDownCallback = { _, _ ->
             display.setMouseLocked(true)
@@ -135,9 +137,7 @@ object Main {
         display.onLoadCallback = {
             Draw.init()
             renderer = RaymarchingShapeRenderer()
-            renderer.loadShape(shape, RenderOptions(
-                    true
-            ))
+            renderer.loadShape(shape, options)
             renderer.loadBuffer(WIDTH, HEIGHT)
             renderer.camera.forward(-30f)
         }
@@ -148,6 +148,26 @@ object Main {
 
         display.onResizedCallback = { width, height ->
             renderer.loadBuffer(width, height)
+        }
+
+        display.onKeyPressedCallback = { key, mods ->
+            var set = false
+
+            if (key == GLFW_KEY_TAB && (mods and GLFW_MOD_CONTROL) != 0) {
+                options.enableReflections(if (options.maxReflectionCount() == 0) 2 else 0)
+                set = true
+            }
+
+            if (key == GLFW_KEY_TAB && (mods and GLFW_MOD_CONTROL) == 0) {
+                if (options.shadowsEnabled()) options.disableShadows() else options.enableShadows()
+                set = true
+            }
+
+            if (key == GLFW_KEY_ENTER) {
+                advanceTime = !advanceTime
+            }
+
+            if (set) renderer.loadShape(shape, options)
         }
 
         display.onUpdateCallback = { dt ->
@@ -172,20 +192,21 @@ object Main {
 
             shape.setFactor(1f + Math.sin(t.toDouble()).toFloat() * 0.8f)
 
+//            (shape as ShapeContainer).getChildren().map { child ->
+//                child.setTranslation(vec3(child.getPosition().x, child.getPosition().y, Math.sin((t * 3 + child.getPosition().x * 5 + child.getPosition().y * 3).toDouble()).toFloat()))
+//            }
+
             if (display.FPS != lastFPS) {
                 println("FPS: ${display.FPS}")
                 lastFPS = display.FPS
             }
 
-            t += dt
+            t += dt * (if (advanceTime) 1 else 0)
         }
 
         display.onDrawCallback = {
             renderer.renderToFramebuffer()
             Draw.texture(renderer.getTexture())
-            (shape as ShapeContainer).getChildren().map { child ->
-                child.setTranslation(vec3(child.getPosition().x, child.getPosition().y, Math.sin((t * 3 + child.getPosition().x * 5 + child.getPosition().y * 3).toDouble()).toFloat()))
-            }
 //            buffer?.debugDraw()
         }
 

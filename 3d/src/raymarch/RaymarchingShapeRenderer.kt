@@ -31,7 +31,14 @@ class RaymarchingShapeRenderer(
 
         compiler.setOptions(options)
         compiler.generateFragmentShaderStart()
-        compiler.generateDefaultFragmentShaderMain()
+
+        if (options.maxReflectionCount() != 0) {
+            compiler.generateReflectionFragmentShaderMain()
+        }
+        else {
+            compiler.generateDefaultFragmentShaderMain()
+        }
+
         compiler.generateFragmentShaderUniforms(shape)
         compiler.generateDistanceFunctionHeaders(shape)
         compiler.generateMaterialFunctionHeaders(shape)

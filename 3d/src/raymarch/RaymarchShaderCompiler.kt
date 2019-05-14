@@ -110,10 +110,9 @@ class RaymarchShaderCompiler: RootBuilder() {
             }
             .appendLine()
             // calculatePointColour determines the colour of a point in 3D space using the material information and lighting
-            .appendFunction("vec3", "calculatePointColour", Pair("vec3", "position")) { block -> block
+            .appendFunction("vec3", "calculatePointColour", Pair("vec3", "position"), Pair("Material", "material")) { block -> block
                     .appendDefinition("vec3", "normal", "estimateNormal(position)")
                     .appendDefinition("float", "lighting", "calculateLightingAt(position, normal)")
-                    .appendDefinition("Material", "material", "getMaterialAt(position)")
                     .appendReturn("material.colour * lighting")
             }
             .appendLine()
@@ -125,11 +124,43 @@ class RaymarchShaderCompiler: RootBuilder() {
             .appendLine()
             .appendLine()
             .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
-                    .appendStatement("gl_FragColor = vec4(calculatePointColour(cameraPosition + direction * result.x), 1)")
+                    .appendDefinition("vec3", "position", "cameraPosition + direction * result.x")
+                    .appendDefinition("Material", "material", "getMaterialAt(position)")
+                    .appendStatement("gl_FragColor = vec4(calculatePointColour(position, material), 1)")
                     .appendStatement("return")
             }
             .appendLine()
-            .appendStatement("gl_FragColor = vec4(0, 0, 0, 0)")
+            .appendStatement("gl_FragColor = vec4(0.7, 0.8, 0.9, 1) * max(0, (direction.y + 0.2) * 0.8)")
+    }
+
+    fun generateReflectionFragmentShaderMain(): RaymarchShaderCompiler
+            =appendFunction("void", "main") { block -> block
+            .appendDefinition("vec3", "position", "cameraPosition")
+            .appendDefinition("vec3", "direction", "transform * normalize(vec3((2 * uv - vec2(1, 1)) * vec2(aspectRatio, 1), -1/tan(FOV/2)))")
+            .appendDefinition("vec4", "computedColour", "vec4(0)")
+            .appendDefinition("int", "reflectionBounces", "0")
+            .appendLine()
+            .appendWhile("computedColour.w < 1 && reflectionBounces <= ${options.maxReflectionCount()}") { wblock -> wblock
+                    .appendDefinition("vec4", "result", "raymarch(position, direction)")
+                    .appendLine()
+                    .appendLine()
+                    .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
+                            .appendStatement("position += direction * result.x")
+                            .appendDefinition("Material", "material", "getMaterialAt(position)")
+                            .appendDefinition("vec3", "normal", "estimateNormal(position)")
+                            .appendDefinition("float", "reflectivity", "${1f/(1+options.maxReflectionCount())}")
+                            .appendStatement("computedColour += vec4(calculatePointColour(position, material), 1 - reflectivity) * min(1 - reflectivity, 1 - computedColour.a)")
+                            .appendStatement("++reflectionBounces")
+                            .appendStatement("direction = reflect(direction, normal)")
+                            .appendStatement("position += direction * ${INTERSECTION_DISTANCE * 10}")
+                            .appendStatement("continue")
+                    }
+                    .appendStatement("break")
+            }
+            .appendLine()
+            .appendStatement("computedColour += vec4(0.7, 0.8, 0.9, 1) * max(0, (direction.y + 0.2) * 0.8) * (1 - computedColour.w)") // ~skybox
+            .appendLine()
+            .appendStatement("gl_FragColor = vec4(computedColour.xyz, 1)")
     }
 
     fun generateMinDistanceFragmentShaderMain(): RaymarchShaderCompiler
