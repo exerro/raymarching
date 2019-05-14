@@ -13,6 +13,10 @@ This is heavily inspired by [Sebastian Lague's Ray Marching video](https://www.y
 
 `3d/` contains 3D rendering code to use ray-marching to draw a 3D scene using OpenGL.
 
+![](https://i.imgur.com/Rew2gn7.png)
+![](https://i.imgur.com/yKwV7XU.gif)
+![](https://i.imgur.com/pcDaZ18.gif)
+
 ## References
 
 - http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/
