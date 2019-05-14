@@ -1,23 +1,27 @@
 package shape.container
 
+import raymarch.RaymarchShaderCompiler
+import shape.ShaderData
 import shape.Shape
 import shape.ShapeContainer
-//
-//class ShapeIntersection(private vararg val children: Shape): ShapeContainer() {
-//    override fun getHeader(): String?
-//            = "DistanceData opIntersectionData(DistanceData a, DistanceData b) {\n" +
-//            "\treturn a.distance > b.distance ? a : b;\n" +
-//            "}"
-//
-//    override fun getFunction(): String
-//            = (2 .. children.size).fold("\$1") { acc, i -> "opIntersectionData($acc, \$$i)" }
-//
-//    override fun getDistanceFunction(): String
-//            = (2 .. children.size).fold("\$1") { acc, i -> "max($acc, \$$i)" }
-//
-//    override fun getUniforms(): Map<String, ShapeUniformValue>
-//            = mapOf()
-//
-//    override fun getChildren(): List<Shape>
-//            = children.toList()
-//}
+import util.appendFunction
+import util.appendReturn
+
+class ShapeIntersection(private vararg val children: Shape): ShapeContainer() {
+    override fun getDistanceFunction(): String
+            = applyToAllChildren("max(\$a, \$b)")
+
+    override fun getMaterialFunction(): String
+            = applyToAllChildren("materialIntersection(\$a, \$b)")
+
+    override fun compileMaterialFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = builder
+            .appendFunction("MaterialDistance", "materialIntersection", Pair("MaterialDistance", "a"), Pair("MaterialDistance", "b")) { block -> block
+                    .appendReturn("a.dist > b.dist ? a : b")
+            }
+
+    override fun getUniforms(): Map<String, ShaderData<*>>
+            = mapOf()
+
+    override fun getChildren(): List<Shape>
+            = children.toList()
+}

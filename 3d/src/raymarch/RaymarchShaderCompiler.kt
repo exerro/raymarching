@@ -11,6 +11,8 @@ class RaymarchShaderCompiler: RootBuilder() {
     private val INTERSECTION_DISTANCE= 0.01f
     private val EPSILON = 0.0001f
     private lateinit var options: RenderOptions
+    private val compiledShapeClassDistanceHeaders = HashSet<String>()
+    private val compiledShapeClassMaterialHeaders = HashSet<String>()
     val lookup = UniformNameLookup()
 
     fun setOptions(options: RenderOptions): RaymarchShaderCompiler {
@@ -55,9 +57,10 @@ class RaymarchShaderCompiler: RootBuilder() {
                             .appendStatement("total_distance += distance")
                             .appendStatement("position += direction * distance")
                             .appendLine()
+                            .appendLine("if (distance < -$INTERSECTION_DISTANCE) return vec4(total_distance - distance, min_distance, max_distance, 0);")
                             .appendLine("if (distance < min_distance) min_distance = distance;")
                             .appendLine("if (distance > max_distance) max_distance = distance;")
-                            .appendLine("if (abs(distance) < $INTERSECTION_DISTANCE) break;")
+                            .appendLine("if (distance < $INTERSECTION_DISTANCE) break;")
                             .appendLine()
                             .appendStatement("++iterations")
                     }
@@ -200,15 +203,21 @@ class RaymarchShaderCompiler: RootBuilder() {
             }
 
     fun generateDistanceFunctionHeaders(shape: Shape): RaymarchShaderCompiler
-            =(shape.compileDistanceFunctionHeader(this) ?: this)
-            .conditional(shape is ShapeContainer) { builder: RaymarchShaderCompiler -> builder
-                    .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileDistanceFunctionHeader(b)?.appendLine() ?: b }
+            =conditional(!compiledShapeClassDistanceHeaders.contains(shape.javaClass.name)) { builder ->
+                    compiledShapeClassDistanceHeaders.add(shape.javaClass.name)
+                    shape.compileDistanceFunctionHeader(builder) ?: builder
+            }
+            .conditional(shape is ShapeContainer) { this
+                    .foreach((shape as ShapeContainer).getChildren()) { _, it -> generateDistanceFunctionHeaders(it) }
             }
 
     fun generateMaterialFunctionHeaders(shape: Shape): RaymarchShaderCompiler
-            =(shape.compileMaterialFunctionHeader(this) ?: this)
-            .conditional(shape is ShapeContainer) { builder -> builder
-                    .foreach((shape as ShapeContainer).getChildren()) { b, it -> it.compileMaterialFunctionHeader(b)?.appendLine() ?: b }
+            =conditional(!compiledShapeClassMaterialHeaders.contains(shape.javaClass.name)) { builder ->
+                    compiledShapeClassMaterialHeaders.add(shape.javaClass.name)
+                    (shape.compileMaterialFunctionHeader(builder) ?: builder).appendLine()
+            }
+            .conditional(shape is ShapeContainer) { this
+                    .foreach((shape as ShapeContainer).getChildren()) { _, it -> generateMaterialFunctionHeaders(it) }
             }
 
     fun generateFunctionDefinitions(shape: Shape): RaymarchShaderCompiler
@@ -230,7 +239,7 @@ class RaymarchShaderCompiler: RootBuilder() {
         val uniformsRemapped = shape.getUniforms().toList().fold(text) { acc, (name, value) ->
             acc.replace("\$$name", if (value.isDynamic()) lookup.valueNames[value]!! else value.getGLSLValue())
         }
-        val propertiesRemapped = uniformsRemapped
+        val propertiesRemapped = (if (uniformsRemapped.contains("\$distance")) uniformsRemapped.replace("\$distance", generateDistanceFunction(shape, ti)) else uniformsRemapped)
                 .replace("\$position", transformPosition(shape, ti))
 
         return if (shape is ShapeContainer) {
@@ -241,15 +250,8 @@ class RaymarchShaderCompiler: RootBuilder() {
             }
         }
         else if (shape is MaterialShape) {
-            val materialRemapped = propertiesRemapped
+            propertiesRemapped
                     .replace("\$material", if (shape.getMaterial().colour.isDynamic()) { shape.getMaterial().colour.changeHandled(); "${lookup.shapeNames[shape]!!}_material" } else shape.getMaterial().colour.getGLSLValue())
-
-            if (materialRemapped.contains("\$distance")) {
-                materialRemapped.replace("\$distance", generateDistanceFunction(shape, ti))
-            }
-            else {
-                materialRemapped
-            }
         }
         else {
             "wtff"
