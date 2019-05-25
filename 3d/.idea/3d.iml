@@ -10,5 +10,6 @@
     <orderEntry type="library" name="lwjgl" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="lwaf_core" level="project" />
+    <orderEntry type="library" name="lwaf_3D" level="project" />
   </component>
 </module>

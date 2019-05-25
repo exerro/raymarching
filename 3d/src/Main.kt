@@ -1,4 +1,6 @@
 //import shape.primitive.Line
+import lwaf_3D.property.moveBy
+import lwaf_3D.property.rotateBy
 import lwaf_core.*
 import org.lwjgl.glfw.GLFW.*
 import raymarch.RaymarchingShapeRenderer
@@ -9,7 +11,7 @@ import shape.primitive.Box
 import shape.primitive.ShapePlane
 import shape.primitive.Sphere
 
-fun box_outline(size: vec3, colour: vec3 = vec3(1f, 1f, 1f), reflectivity: Float = 0.3f): Shape {
+fun boxOutline(size: vec3, colour: vec3 = vec3(1f, 1f, 1f), reflectivity: Float = 0.3f): Shape {
     return ShapeDifference(
             ShapeDifference(
                     Box(size).setColour(colour).setReflectivity(reflectivity),
@@ -104,8 +106,8 @@ object Main {
                 sphere2,
                 transition,
                 ShapeUnion(
-                    box_outline(vec3(10f), vec3(1f, 1f, 1f), 0.5f),
-                    box_outline(vec3(7f), vec3(0.8f, 0.2f, 0.5f), 0f),
+                    boxOutline(vec3(10f), vec3(1f, 1f, 1f), 0.5f),
+                    boxOutline(vec3(7f), vec3(0.8f, 0.2f, 0.5f), 0f),
                     Box(vec3(3f)).setReflectivity(0.6f).setColour(0.4f, 0.9f, 1f).setRotation(vec3(0.7853975f))
 //                    Box(vec3(3f)).setReflectivity(0.6f).setColour(0.4f, 0.9f, 1f)
                 ).translateBy(vec3(40f, 0f, 0f)),
@@ -148,18 +150,18 @@ object Main {
         display.attachMouseDragCallback { pos, last, _, _ ->
             val dx = pos.x - last.x
             val dy = pos.y - last.y
-            renderer.camera.rotateY(-dx / display.getWindowSize().x * 0.5f)
-            renderer.camera.rotateX(-dy / display.getWindowSize().y * 0.5f)
+            renderer.camera.rotateBy(vec3(0f, -dx / display.getWindowSize().x * 0.5f, 0f))
+            renderer.camera.rotateBy(vec3(-dy / display.getWindowSize().y * 0.5f, 0f, 0f))
         }
 
         display.attachLoadCallback {
-            renderer = RaymarchingShapeRenderer()
+            renderer = RaymarchingShapeRenderer(70f)
             renderer.loadShape(shape, options)
             renderer.loadShape(shape, options)
             renderer.loadBuffer(WIDTH, HEIGHT)
-            renderer.camera.forward(-30f)
-            renderer.camera.right(-20f)
-            renderer.camera.rotateY(-Math.PI.toFloat() * 0.5f)
+            renderer.camera.moveBy(renderer.camera.forward * -30f)
+            renderer.camera.moveBy(renderer.camera.right * -20f)
+            renderer.camera.rotateBy(vec3(0f, -Math.PI.toFloat() * 0.5f, 0f))
             context2D = DrawContext2D(GLView(vec2(0f), display.getWindowSize()))
             font = loadFont("res/font/open-sans/OpenSans-Regular.fnt")
         }
@@ -196,12 +198,12 @@ object Main {
         display.attachUpdateCallback { dt ->
             frames++
 
-            if (display.isKeyDown(GLFW_KEY_W)) renderer.camera.forward(speed * dt)
-            if (display.isKeyDown(GLFW_KEY_S)) renderer.camera.forward(-speed * dt)
-            if (display.isKeyDown(GLFW_KEY_A)) renderer.camera.right(-speed * dt)
-            if (display.isKeyDown(GLFW_KEY_D)) renderer.camera.right(speed * dt)
-            if (display.isKeyDown(GLFW_KEY_SPACE)) renderer.camera.up(speed * dt)
-            if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer.camera.up(-speed * dt)
+            if (display.isKeyDown(GLFW_KEY_W)) renderer.camera.moveBy(renderer.camera.flatForward * speed * dt)
+            if (display.isKeyDown(GLFW_KEY_S)) renderer.camera.moveBy(renderer.camera.flatForward * -speed * dt)
+            if (display.isKeyDown(GLFW_KEY_A)) renderer.camera.moveBy(renderer.camera.flatRight * -speed * dt)
+            if (display.isKeyDown(GLFW_KEY_D)) renderer.camera.moveBy(renderer.camera.flatRight * speed * dt)
+            if (display.isKeyDown(GLFW_KEY_SPACE)) renderer.camera.moveBy(renderer.camera.flatUp * speed * dt)
+            if (display.isKeyDown(GLFW_KEY_LEFT_SHIFT)) renderer.camera.moveBy(renderer.camera.flatUp * -speed * dt)
 
             sphere.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))
             sphere2.setTranslation(vec3(0.0f, Math.sin(t.toDouble() * 3).toFloat() * 8 + 5, 0.0f))

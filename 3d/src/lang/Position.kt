@@ -79,12 +79,11 @@ data class Position(val line1: Int, val char1: Int, val line2: Int = line1, val 
 fun Position.getSourceLines(stream: TokenStream): Pair<String, String> {
     return if (line1 == line2) {
         val line = getLine(stream, line1)
-        return Pair(line, line)
-    }
-    else {
+        Pair(line, line)
+    } else {
         val l1 = getLine(stream, line1)
         val l2 = getLine(stream, line2 - line1)
-        return Pair(l1, l2)
+        Pair(l1, l2)
     }
 }
 

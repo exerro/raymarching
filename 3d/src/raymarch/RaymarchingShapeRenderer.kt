@@ -1,5 +1,6 @@
 package raymarch
 
+import lwaf_3D.Camera
 import lwaf_core.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
@@ -9,7 +10,8 @@ import java.nio.file.Paths
 import kotlin.math.max
 
 class RaymarchingShapeRenderer(
-        val camera: Camera = shape.Camera()
+        private val fov: Float,
+        val camera: Camera = Camera().setPerspectiveProjection(1f)
 ): GLResource {
     private lateinit var shape: Shape
     private lateinit var shader: GLShaderProgram
@@ -68,6 +70,7 @@ class RaymarchingShapeRenderer(
     fun loadBuffer(width: Int, height: Int) {
         if (bufferLoaded) unloadBuffer()
 
+        camera.setPerspectiveProjection(width.toFloat() / height, fov)
         dimensions = vec2(width.toFloat(), height.toFloat())
         framebuffer = GLFramebuffer(width, height)
         texture = createEmptyTexture(width, height)
@@ -109,7 +112,7 @@ class RaymarchingShapeRenderer(
         shader.setUniform("cameraPosition", camera.position)
         shader.setUniform("transform", camera.rotation.toRotationMatrix())
         shader.setUniform("aspectRatio", dimensions.x / dimensions.y)
-        shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
+        shader.setUniform("FOV", fov * Math.PI.toFloat() / 180.0f)
 
         lookup.valueNames.map { (value, name) ->
             if (value.hasChanged()) {
