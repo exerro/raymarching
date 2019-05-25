@@ -1,26 +1,32 @@
 //import shape.primitive.Line
-import gl.Display
-import gl.Draw
+import lwaf_core.*
 import org.lwjgl.glfw.GLFW.*
 import raymarch.RaymarchingShapeRenderer
 import raymarch.RenderOptions
 import shape.*
 import shape.container.*
-import shape.primitive.*
-import util.*
+import shape.primitive.Box
+import shape.primitive.ShapePlane
+import shape.primitive.Sphere
+
+fun box_outline(size: vec3, colour: vec3 = vec3(1f, 1f, 1f), reflectivity: Float = 0.3f): Shape {
+    return ShapeDifference(
+            ShapeDifference(
+                    Box(size).setColour(colour).setReflectivity(reflectivity),
+                    Box(size * vec3(1.01f, 0.8f, 0.8f)).setColour(colour).setReflectivity(reflectivity)
+            ),
+            Box(size * vec3(0.8f, 0.8f, 1.01f)).setColour(colour).setReflectivity(reflectivity)
+    )
+}
 
 object Main {
     var t: Float = 0.0f
-    val WIDTH = 1080
-    val HEIGHT = 720
+    val WIDTH = 720
+    val HEIGHT = 540
 
     @JvmStatic
     fun main(args: Array<String>) {
-        Logging.enable(LogType.ERROR)
-        Logging.enable(LogType.WARNING)
-//        Logging.enable(LogType.INFO)
-        Logging.enable(LogType.SHADER_COMPILE)
-//        Logging.enable(LogType.SHADER_UNIFORM)
+//        Logging.enable()
 
         val display = Display(WIDTH, HEIGHT)
         val sphere = Sphere(8f).setColour(1.0f, 0.5f, 0.5f).setScale(1f).setTranslation(vec3(-4f, 2f, 0f)).setReflectivity(0f)
@@ -67,25 +73,16 @@ object Main {
                 0f
         )
         transition.getTransitionProperty().setDynamic()
-        var shape: Shape = ShapeUnion(
-                ShapeDissolve(
-                        5f,
-                        blend,
-                        sphere
-                ),
-                sphere2,
-                transition,
-                Sphere(0f)
-        )
 
         var stuff = arrayOf<Shape>()
         val spheres = ((1 .. 5).map { a -> (1 .. 5).map { b -> Pair(a, b) } }.flatten().map { (a, b) ->
-            Sphere(0.4f)
+            Sphere(4f)
+                    .setReflectivity(Math.pow(Math.random(), 2.0).toFloat())
                     .setTranslation(vec3(
-                            a.toFloat(),
-                            b.toFloat(),
-                            Math.sin((a.toFloat() * 5 + b.toFloat() * 3).toDouble()).toFloat()
-                    ).mul(1.2f))
+                            a.toFloat() * 10,
+                            Math.sin((a.toFloat() * 5 + b.toFloat() * 3).toDouble()).toFloat() * 3 - 7,
+                            b.toFloat() * 10
+                    ) * 1.2f)
                     .setColour(
                             a.toFloat() / 5f,
                             b.toFloat() / 5f,
@@ -97,6 +94,24 @@ object Main {
 
         spheres.map { v -> stuff = arrayOf(*stuff, v) }
 
+        var shape: Shape = ShapeUnion(
+                ShapeDissolve(
+                        5f,
+                        blend,
+                        sphere
+                ),
+//                ShapeBlend(0f, *stuff),
+                sphere2,
+                transition,
+                ShapeUnion(
+                    box_outline(vec3(10f), vec3(1f, 1f, 1f), 0.5f),
+                    box_outline(vec3(7f), vec3(0.8f, 0.2f, 0.5f), 0f),
+                    Box(vec3(3f)).setReflectivity(0.6f).setColour(0.4f, 0.9f, 1f).setRotation(vec3(0.7853975f))
+//                    Box(vec3(3f)).setReflectivity(0.6f).setColour(0.4f, 0.9f, 1f)
+                ).translateBy(vec3(40f, 0f, 0f)),
+                ShapePlane(vec3(0f, -20f, 0f), vec3(0f, 1f, 0f)).setReflectivity(0.3f).setColour(0.9f, 0.3f, 0.6f)
+        )
+
 //        shape = ShapeBlend(
 //                1.7f,
 //                *stuff,
@@ -107,66 +122,58 @@ object Main {
 //        shape.dynamicPosition()
 //        shape.setScale(10f)
 //        shape.dynamicPosition()
-
-        fun box_outline(size: vec3): Shape {
-            return ShapeDifference(
-                    Box(size),
-                    ShapeUnion(
-                            Box(size.mul(vec3(1.01f, 0.8f, 0.8f))),
-                            Box(size.mul(vec3(0.8f, 1.01f, 0.8f))),
-                            Box(size.mul(vec3(0.8f, 0.8f, 1.01f)))
-                    )
-            )
-        }
-
+//
 //        shape = ShapeUnion(
-//                box_outline(vec3(10f)),
-//                Box(vec3(7f)).setColour(1f, 0f, 0f).setTranslation(vec3(10f, 0f, 0f))
-////                box_outline(vec3(7f)),
-////                box_outline(vec3(4f))
+//                *stuff,
+//                ShapePlane(vec3(0f, -20f, 0f), vec3(0f, 1f, 0f)).setReflectivity(0.3f).setColour(0.9f, 0.3f, 0.6f)
 //        )
 
         lateinit var renderer: RaymarchingShapeRenderer
 
         val speed = 10f
-        val options = RenderOptions().enableReflections(2).enableShadows()
-        var lastFPS = 0
-        var advanceTime = true
-        var drawScale = vec2(1f, 1f)
+        val options = RenderOptions().enableReflections(3).disableShadows()
+        var frames = 0
+        var advanceTime = false
+        lateinit var context2D: DrawContext2D
+        lateinit var font: Font
 
-        display.onMouseDownCallback = { _, _ ->
+        display.attachMouseDownCallback { _, _ ->
             display.setMouseLocked(true)
         }
 
-        display.onMouseUpCallback = { _, _ ->
+        display.attachMouseUpCallback { _, _ ->
             if (!display.isMouseDown()) display.setMouseLocked(false)
         }
 
-        display.onMouseDragCallback = { pos, last, _, _ ->
+        display.attachMouseDragCallback { pos, last, _, _ ->
             val dx = pos.x - last.x
             val dy = pos.y - last.y
-            renderer.camera.rotateY(-dx / display.width * 0.5f)
-            renderer.camera.rotateX(-dy / display.height * 0.5f)
+            renderer.camera.rotateY(-dx / display.getWindowSize().x * 0.5f)
+            renderer.camera.rotateX(-dy / display.getWindowSize().y * 0.5f)
         }
 
-        display.onLoadCallback = {
-            Draw.init()
+        display.attachLoadCallback {
             renderer = RaymarchingShapeRenderer()
+            renderer.loadShape(shape, options)
             renderer.loadShape(shape, options)
             renderer.loadBuffer(WIDTH, HEIGHT)
             renderer.camera.forward(-30f)
+            renderer.camera.right(-20f)
+            renderer.camera.rotateY(-Math.PI.toFloat() * 0.5f)
+            context2D = DrawContext2D(GLView(vec2(0f), display.getWindowSize()))
+            font = loadFont("res/font/open-sans/OpenSans-Regular.fnt")
         }
 
-        display.onUnloadCallback = {
+        display.attachUnloadCallback {
             renderer.destroy()
         }
 
-        display.onResizedCallback = { width, height ->
-            renderer.loadBuffer(width * 2 / 3, height * 2 / 3)
-            drawScale = vec2(1.5f, 1.5f)
+        display.attachResizedCallback { width, height ->
+            renderer.loadBuffer(width, height)
+            context2D = DrawContext2D(GLView(vec2(0f), display.getWindowSize()))
         }
 
-        display.onKeyPressedCallback = { key, mods ->
+        display.attachKeyPressedCallback { key, mods ->
             var set = false
 
             if (key == GLFW_KEY_TAB && (mods and GLFW_MOD_CONTROL) != 0) {
@@ -186,7 +193,9 @@ object Main {
             if (set) renderer.loadShape(shape, options)
         }
 
-        display.onUpdateCallback = { dt ->
+        display.attachUpdateCallback { dt ->
+            frames++
+
             if (display.isKeyDown(GLFW_KEY_W)) renderer.camera.forward(speed * dt)
             if (display.isKeyDown(GLFW_KEY_S)) renderer.camera.forward(-speed * dt)
             if (display.isKeyDown(GLFW_KEY_A)) renderer.camera.right(-speed * dt)
@@ -215,17 +224,13 @@ object Main {
 //                child.setTranslation(vec3(child.getPosition().x, child.getPosition().y, Math.sin((t * 3 + child.getPosition().x * 5 + child.getPosition().y * 3).toDouble()).toFloat()))
 //            }
 
-            if (display.FPS != lastFPS) {
-                println("FPS: ${display.FPS}")
-                lastFPS = display.FPS
-            }
-
             t += dt * (if (advanceTime) 1 else 0)
         }
 
-        display.onDrawCallback = {
+        display.attachDrawCallback {
             renderer.renderToFramebuffer()
-            Draw.texture(renderer.getTexture(), vec2(0f, 0f), drawScale)
+            context2D.drawTexture(renderer.getTexture(), vec2(0f, 0f))
+            context2D.write(display.fps.toString(), font, vec2(0f))
 //            buffer?.debugDraw()
         }
 

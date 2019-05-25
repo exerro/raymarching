@@ -1,7 +1,7 @@
 package shape
 
-import gl.GLShaderProgram
-import util.vec3
+import lwaf_core.GLShaderProgram
+import lwaf_core.vec3
 
 class Material(colour: vec3, reflectivity: Float = 0.02f) {
     val colour = MaterialColour(colour)

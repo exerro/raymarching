@@ -1,9 +1,9 @@
 package shape
 
-import gl.GLShaderProgram
-import util.vec2
-import util.vec3
-import util.vec4
+import lwaf_core.GLShaderProgram
+import lwaf_core.vec2
+import lwaf_core.vec3
+import lwaf_core.vec4
 
 class FloatShapeUniformValue(value: Float) : ShaderData<Float>(value) {
     override fun getGLSLValue(): String

@@ -1,6 +1,8 @@
 package shape
 
-import util.vec3
+import lwaf_core.plus
+import lwaf_core.times
+import lwaf_core.vec3
 
 class TransformInfo(
         val transform: ShapeTransform,
@@ -18,7 +20,7 @@ class TransformInfo(
     private val dynamic: Boolean = (parent?.dynamic ?: false) || dynamicTranslation || dynamicRotation || dynamicScale
     val dynamicOrRotated: Boolean = dynamic || rotated
 
-    fun getTranslation(): vec3 = parent?.getTranslation()?.add(transform.position.mul(parent.getScale())) ?: transform.position
-    fun getRotation(): vec3 = parent?.getRotation()?.add(transform.rotation) ?: transform.rotation
-    fun getScale(): vec3 = parent?.getScale()?.mul(transform.scale) ?: transform.scale
+    fun getTranslation(): vec3 = parent?.getTranslation()?.plus(transform.position.times(parent.getScale())) ?: transform.position
+    fun getRotation(): vec3 = parent?.getRotation()?.plus(transform.rotation) ?: transform.rotation
+    fun getScale(): vec3 = parent?.getScale()?.times(transform.scale) ?: transform.scale
 }

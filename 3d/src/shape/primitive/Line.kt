@@ -1,9 +1,6 @@
 package shape.primitive
 
 import shape.*
-import util.position
-import util.vec3
-import util.vec4
 //
 //class Line(a: vec3, b: vec3, radius: Float, material: Material = default_material()) : MaterialShape(material) {
 //    private val positionAUniform = Vec3ShapeUniformValue(a)

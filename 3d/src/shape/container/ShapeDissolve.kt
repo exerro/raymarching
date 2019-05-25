@@ -20,15 +20,15 @@ class ShapeDissolve(factor: Float, private val a: Shape, private val b: Shape): 
     }
 
     override fun getDistanceFunction(): String
-            = applyToAllChildren("opDissolve(\$a, -(\$b), \$factor)")
+            = applyToAllChildren("opDissolve(\$a, \$b, \$factor)")
 
     override fun getMaterialFunction(): String
             = applyToAllChildren("materialDissolve(\$a, \$b, \$factor, \$distance)")
 
     override fun compileDistanceFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = builder
             .appendFunction("float", "opDissolve", Pair("float", "a"), Pair("float", "b"), Pair("float", "k")) { block -> block
-                    .appendDefinition("float", "h", "max(k - abs(a - b), 0) / k")
-                    .appendReturn("max(a, b) + h*h*h*k/6.0")
+                    .appendDefinition("float", "h", "clamp( 0.5 - 0.5*(a+b)/k, 0.0, 1.0 )")
+                    .appendReturn("mix(a, -b, h ) + k*h*(1.0-h)")
             }
 
     override fun compileMaterialFunctionHeader(builder: RaymarchShaderCompiler): RaymarchShaderCompiler? = builder

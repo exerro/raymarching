@@ -1,8 +1,6 @@
 package shape
 
-import util.direction
-import util.toRotationMatrix
-import util.vec3
+import lwaf_core.*
 
 class Camera {
     var FOV: Float = 70.0f
@@ -10,32 +8,32 @@ class Camera {
     var rotation = vec3(0f, 0f, 0f)
 
     fun forward(distance: Float) {
-        position = position.add(getFacing().flat().mul(distance))
+        position += getFacing().flat() * distance
     }
 
     fun right(distance: Float) {
-        position = position.add(getRight().mul(distance))
+        position += getRight().flat() * distance
     }
 
     fun up(distance: Float) {
-        position = position.add(vec3(0f, distance, 0f))
+        position += getUp() * distance
     }
 
     fun rotateX(theta: Float) {
-        rotation = rotation.add(vec3(theta, 0f, 0f))
+        rotation += vec3(theta, 0f, 0f)
     }
 
     fun rotateY(theta: Float) {
-        rotation = rotation.add(vec3(0f, theta, 0f))
+        rotation += vec3(0f, theta, 0f)
     }
 
     fun rotateZ(theta: Float) {
-        rotation = rotation.add(vec3(0f, 0f, theta))
+        rotation += vec3(0f, 0f, theta)
     }
 
-    fun getFacing(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 0f, -1f).direction()).vec3()
-    fun getUp(): vec3 = rotation.toRotationMatrix().mul(vec3(0f, 1f, 0f).direction()).vec3()
-    fun getRight(): vec3 = rotation.toRotationMatrix().mul(vec3(1f, 0f, 0f).direction()).vec3()
+    fun getFacing(): vec3 = rotation.toRotationMatrix() * vec3(0f, 0f, -1f)
+    fun getUp(): vec3 = rotation.toRotationMatrix() * vec3(0f, 1f, 0f)
+    fun getRight(): vec3 = rotation.toRotationMatrix() * vec3(1f, 0f, 0f)
 
 }
 

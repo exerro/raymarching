@@ -7,9 +7,9 @@ import kotlin.math.max
 
 class RaymarchShaderCompiler: RootBuilder() {
     private val MAX_ITERATIONS = 500
-    private val MAX_DISTANCE= 500
+    private val MAX_DISTANCE= 5000
     private val INTERSECTION_DISTANCE= 0.01f
-    private val EPSILON = 0.0001f
+    private val EPSILON = 0.001f
     private lateinit var options: RenderOptions
     private val compiledShapeClassDistanceHeaders = HashSet<String>()
     private val compiledShapeClassMaterialHeaders = HashSet<String>()
@@ -59,8 +59,8 @@ class RaymarchShaderCompiler: RootBuilder() {
                             .appendStatement("position += direction * distance")
                             .appendLine()
                             .appendLine("if (distance < -$INTERSECTION_DISTANCE) return vec4(total_distance - distance, min_distance, max_distance, 0);")
-                            .appendLine("if (distance < min_distance) min_distance = distance;")
-                            .appendLine("if (distance > max_distance) max_distance = distance;")
+//                            .appendLine("if (distance < min_distance) min_distance = distance;")
+//                            .appendLine("if (distance > max_distance) max_distance = distance;")
                             .appendLine("if (distance < $INTERSECTION_DISTANCE) break;")
                             .appendLine()
                             .appendStatement("++iterations")
@@ -86,11 +86,11 @@ class RaymarchShaderCompiler: RootBuilder() {
             // estimateNormal estimates... you guessed it... the normal (distance gradient at a point in 3D space)
             .appendFunction("float", "calculateShadowFactor", Pair("vec3", "position"), Pair("vec3", "normal")) { block -> block
                     .conditional(options.shadowsEnabled()) { sblock -> sblock
-                            .appendDefinition("vec4", "trace", "raymarch(position - LIGHT_DIRECTION * ${INTERSECTION_DISTANCE * 10}, -LIGHT_DIRECTION)")
-                            .appendIf("trace.x < $MAX_DISTANCE") { sblock -> sblock
-                                    .appendReturn("0")
+                            .appendIf("dot(normal, -LIGHT_DIRECTION) > 0") { iblock -> iblock
+                                    .appendDefinition("vec4", "trace", "raymarch(position - LIGHT_DIRECTION * ${INTERSECTION_DISTANCE * 10}, -LIGHT_DIRECTION)")
+                                    .appendReturn("step(${MAX_DISTANCE - 1}, trace.x)")
                             }
-                            .appendReturn("1")
+                            .appendReturn(0)
                         // motherfucking shadows fuck everything aaaagh
 //                            .appendReturn("distanceFunction(position + normal * 0.1) / 0.1")
 //                            .appendDefinition("vec4", "trace_fine1", "raymarch(position - LIGHT_DIRECTION / dot(-LIGHT_DIRECTION, normal), -LIGHT_DIRECTION)")
@@ -113,8 +113,7 @@ class RaymarchShaderCompiler: RootBuilder() {
             }
             .appendLine()
             // calculatePointColour determines the colour of a point in 3D space using the material information and lighting
-            .appendFunction("vec3", "calculatePointColour", Pair("vec3", "position"), Pair("Material", "material")) { block -> block
-                    .appendDefinition("vec3", "normal", "estimateNormal(position)")
+            .appendFunction("vec3", "calculatePointColour", Pair("vec3", "position"), Pair("Material", "material"), Pair("vec3", "normal")) { block -> block
                     .appendDefinition("float", "lighting", "calculateLightingAt(position, normal)")
                     .appendReturn("material.colour * lighting")
             }
@@ -133,10 +132,12 @@ class RaymarchShaderCompiler: RootBuilder() {
                     .appendLine()
                     .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
                             .appendStatement("position += direction * result.x")
-                            .appendDefinition("Material", "material", "getMaterialAt(position)")
+                            .appendDefinition("Material", "material", "materialFunction(position).material")
                             .appendDefinition("vec3", "normal", "estimateNormal(position)")
                             .appendDefinition("float", "reflectivity", "material.reflectivity")
-                            .appendStatement("computedColour += vec4(calculatePointColour(position, material), 1) * (1 - reflectivity) * (1 - computedColour.w)")
+                            .appendDefinition("float", "lighting", "calculateLightingAt(position, normal)")
+                            .appendDefinition("vec3", "materialColour", "material.colour * lighting")
+                            .appendStatement("computedColour += vec4(materialColour, 1) * (1 - reflectivity) * (1 - computedColour.w)")
                             .appendStatement("++reflectionBounces")
                             .appendStatement("direction = reflect(direction, normal)")
                             .appendStatement("position += direction * ${INTERSECTION_DISTANCE * 10}")
@@ -162,8 +163,9 @@ class RaymarchShaderCompiler: RootBuilder() {
             .appendLine()
             .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock
                     .appendDefinition("vec3", "position", "cameraPosition + direction * result.x")
+                    .appendDefinition("vec3", "normal", "estimateNormal(position)")
                     .appendDefinition("Material", "material", "getMaterialAt(position)")
-                    .appendStatement("gl_FragColor = vec4(calculatePointColour(position, material), 1)")
+                    .appendStatement("gl_FragColor = vec4(calculatePointColour(position, material, normal), 1)")
                     .appendStatement("return")
             }
             .appendLine()

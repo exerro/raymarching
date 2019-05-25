@@ -1,6 +1,6 @@
 package shape
 
-import gl.GLShaderProgram
+import lwaf_core.GLShaderProgram
 import util.ChangingProperty
 
 abstract class ShaderData<T>(private var value: T): ChangingProperty() {

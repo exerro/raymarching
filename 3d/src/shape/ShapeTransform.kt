@@ -1,5 +1,6 @@
 package shape
 
+import lwaf_core.*
 import util.*
 
 data class ShapeTransform(
@@ -22,7 +23,7 @@ data class ShapeTransform(
             = if (needsRecompute()) computeTransformationMatrix() else transformation
 
     fun computeTransformationMatrix(): mat4 {
-        transformation = mat4_translate(position).mul(rotation.toRotationMatrix()).mul(mat4_scale(scale))
+        transformation = mat4_translate(position) * (rotation.toRotationMatrix() * mat3_scale(scale)).mat4()
         changeHandled()
         return transformation
     }

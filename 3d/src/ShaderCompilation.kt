@@ -1,10 +1,10 @@
+import lwaf_core.vec3
 import raymarch.RaymarchShaderCompiler
 import shape.Shape
 import shape.container.ShapeUnion
 import raymarch.loadUniformNameLookup
 import shape.primitive.Sphere
 import shape.setTranslation
-import util.vec3
 
 object ShaderCompilation {
     @JvmStatic

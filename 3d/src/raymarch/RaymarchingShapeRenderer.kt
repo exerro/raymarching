@@ -1,11 +1,9 @@
 package raymarch
 
-import gl.*
+import lwaf_core.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import shape.*
-import util.*
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.math.max
@@ -17,8 +15,8 @@ class RaymarchingShapeRenderer(
     private lateinit var shader: GLShaderProgram
     private lateinit var lookup: UniformNameLookup
     private lateinit var dimensions: vec2
-    private lateinit var framebuffer: FBO
-    private lateinit var texture: Texture
+    private lateinit var framebuffer: GLFramebuffer
+    private lateinit var texture: GLTexture
     private var shapeLoaded: Boolean = false
     private var bufferLoaded: Boolean = false
 
@@ -26,6 +24,8 @@ class RaymarchingShapeRenderer(
         if (shapeLoaded) { unloadShape() }
         this.shape = shape
         val compiler = RaymarchShaderCompiler()
+
+        shape.notifyChanged()
 
         loadUniformNameLookup(shape, compiler.lookup)
 
@@ -54,7 +54,7 @@ class RaymarchingShapeRenderer(
         shape.lock()
     }
 
-    fun getTexture(): Texture {
+    fun getTexture(): GLTexture {
         if (!bufferLoaded) throw IllegalStateException("cannot get texture of renderer without a loaded buffer")
         return texture
     }
@@ -69,7 +69,7 @@ class RaymarchingShapeRenderer(
         if (bufferLoaded) unloadBuffer()
 
         dimensions = vec2(width.toFloat(), height.toFloat())
-        framebuffer = FBO(width, height)
+        framebuffer = GLFramebuffer(width, height)
         texture = createEmptyTexture(width, height)
 
         framebuffer.attachTexture(texture, GL30.GL_COLOR_ATTACHMENT0)
@@ -96,19 +96,18 @@ class RaymarchingShapeRenderer(
 
         setUniforms()
 
-        Draw.pushViewport(vec2(framebuffer.width.toFloat(), framebuffer.height.toFloat()))
+        GLView(vec2(0f), dimensions).setViewport()
         shader.start()
         screen_quad.load()
         GL11.glDrawElements(GL11.GL_TRIANGLES, screen_quad.vertexCount, GL11.GL_UNSIGNED_INT, 0)
         screen_quad.unload()
         shader.stop()
         framebuffer.unbind()
-        Draw.popViewport()
     }
 
     private fun setUniforms() {
         shader.setUniform("cameraPosition", camera.position)
-        shader.setUniform("transform", camera.rotation.toRotationMatrix().mat3())
+        shader.setUniform("transform", camera.rotation.toRotationMatrix())
         shader.setUniform("aspectRatio", dimensions.x / dimensions.y)
         shader.setUniform("FOV", camera.FOV * Math.PI.toFloat() / 180.0f)
 
@@ -133,18 +132,18 @@ class RaymarchingShapeRenderer(
 
     private fun setTransformationUniforms(shape: Shape, transform: mat4, ti: TransformInfo) {
         if (shape is MaterialShape && ti.dynamicOrRotated && shape.transform.needsRecompute()) {
-            val thisTransform = transform.mul(shape.transform.getTransformationMatrix())
+            val thisTransform = transform * shape.transform.getTransformationMatrix()
             shape.transform.changeHandled()
             shader.setUniform("${lookup.shapeNames[shape]!!}_transform", thisTransform.inverse())
 
             if (ti.dynamicScale) {
-                val scaled = thisTransform.mul(vec3(1f, 1f, 1f).direction()).vec3()
+                val scaled = (thisTransform * vec3(1f, 1f, 1f).vec4(0f)).vec3()
                 val divisor = max(max(1/scaled.x, 1/scaled.y), 1/scaled.z)
                 shader.setUniform("${lookup.shapeNames[shape]!!}_divisor", divisor)
             }
         }
         else if (shape is ShapeContainer) {
-            val thisTransform = transform.mul(shape.transform.getTransformationMatrix())
+            val thisTransform = transform * shape.transform.getTransformationMatrix()
             for (child in shape.getChildren()) {
                 setTransformationUniforms(child, thisTransform, TransformInfo(child.transform, ti))
             }
