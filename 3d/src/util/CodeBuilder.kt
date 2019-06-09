@@ -7,7 +7,7 @@ sealed class CodeBuilder {
     open fun getText(): String = result.toString()
 }
 
-class BlockBuilder: CodeBuilder() {
+open class BlockBuilder: CodeBuilder() {
     override fun getText(): String {
         var text = super.getText()
         while (text.endsWith("\n")) text = text.substring(0, text.length - 1)
@@ -50,7 +50,7 @@ fun <T: CodeBuilder> T.appendBlock(builder: (BlockBuilder) -> BlockBuilder): T
 fun <T: BlockBuilder, String> T.appendIf(condition: String, builder: (BlockBuilder) -> BlockBuilder): T
         = append("if ($condition) ").appendBlock(builder)
 
-fun <T: BlockBuilder, String> T.appendWhile(condition: String, builder: (BlockBuilder) -> BlockBuilder): T
+fun <T: BlockBuilder, String> T.appendWhile(condition: String, builder: (BlockBuilder).() -> BlockBuilder): T // TODO: make everything use the ().() stuff
         = append("while ($condition) ").appendBlock(builder)
 
 fun <T: BlockBuilder, V> T.appendReturn(value: V): T

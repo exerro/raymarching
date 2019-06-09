@@ -157,7 +157,6 @@ object Main {
         display.attachLoadCallback {
             renderer = RaymarchingShapeRenderer(70f)
             renderer.loadShape(shape, options)
-            renderer.loadShape(shape, options)
             renderer.loadBuffer(WIDTH, HEIGHT)
             renderer.camera.moveBy(renderer.camera.forward * -30f)
             renderer.camera.moveBy(renderer.camera.right * -20f)

@@ -53,8 +53,8 @@ class RaymarchShaderCompiler: RootBuilder() {
                     .appendDefinition("float", "max_distance", 0)
                     .appendDeclaration("float", "distance")
                     .appendLine()
-                    .appendWhile("iterations < $MAX_ITERATIONS && total_distance < $MAX_DISTANCE") { wblock -> wblock
-                            .appendStatement("distance = distanceFunction(position)")
+                    .appendWhile("iterations < $MAX_ITERATIONS && total_distance < $MAX_DISTANCE") {
+                            this.appendStatement("distance = distanceFunction(position)")
                             .appendStatement("total_distance += distance")
                             .appendStatement("position += direction * distance")
                             .appendLine()
@@ -126,8 +126,8 @@ class RaymarchShaderCompiler: RootBuilder() {
             .appendDefinition("vec4", "computedColour", "vec4(0)")
             .appendDefinition("int", "reflectionBounces", "0")
             .appendLine()
-            .appendWhile("computedColour.w < 1 && reflectionBounces <= ${options.maxReflectionCount()}") { wblock -> wblock
-                    .appendDefinition("vec4", "result", "raymarch(position, direction)")
+            .appendWhile("computedColour.w < 1 && reflectionBounces <= ${options.maxReflectionCount()}") {
+                    this.appendDefinition("vec4", "result", "raymarch(position, direction)")
                     .appendLine()
                     .appendLine()
                     .appendIf("abs(result.w) <= $INTERSECTION_DISTANCE") { iblock -> iblock

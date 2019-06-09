@@ -13,6 +13,8 @@ This is heavily inspired by [Sebastian Lague's Ray Marching video](https://www.y
 
 `3d/` contains 3D rendering code to use ray-marching to draw a 3D scene using OpenGL.
 
+This uses [LWAF](https://github.com/exerro/LWAF) - a general purpose Kotlin LWJGL wrapper
+
 ![](https://i.imgur.com/Rew2gn7.png)
 * https://i.imgur.com/yKwV7XU.gif
 * https://i.imgur.com/pcDaZ18.gif

@@ -3,7 +3,7 @@ package shape
 import lwaf_core.GLShaderProgram
 import lwaf_core.vec3
 
-class Material(colour: vec3, reflectivity: Float = 0.02f) {
+class Material(colour: vec3 = vec3(1f), reflectivity: Float = 0.02f) {
     val colour = MaterialColour(colour)
     val reflectivity = MaterialReflectivity(reflectivity)
 
