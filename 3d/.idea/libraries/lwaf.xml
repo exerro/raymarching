@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="lwaf">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../dev_out/lwaf_3D.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../dev_out/lwaf_core.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../../../dev_out/lwaf_core.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../../dev_out/lwaf_core.jar!/" />
+    </SOURCES>
+  </library>
+</component>
