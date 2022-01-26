@@ -1,4 +1,6 @@
-/3d/out
-/3d/.idea/workspace.xml
-/3d/lib
-/out/
+# IDEA stuff
+/.idea/
+
+# Gradle stuff
+/3d/build/
+/3d/.gradle/
